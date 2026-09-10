@@ -37,6 +37,21 @@ fn default_artifacts() -> Vec<ArtifactDef> {
 #[derive(Debug, Deserialize, Default)]
 struct Config {
     schema: Option<String>,
+    /// Prose the project shows its agents: stack, conventions, domain.
+    context: Option<String>,
+}
+
+fn read_config(root: &Path) -> Option<Config> {
+    let text = std::fs::read_to_string(root.join("openspec").join("config.yaml")).ok()?;
+    serde_yaml_ng::from_str(&text).ok()
+}
+
+/// The project's own description of itself, as written in `config.yaml`.
+pub fn project_context(root: &Path) -> Option<String> {
+    read_config(root)?
+        .context
+        .map(|c| c.trim().to_string())
+        .filter(|c| !c.is_empty())
 }
 
 /// A schema definition file.
@@ -62,10 +77,7 @@ struct SchemaFileArtifact {
 /// Read the schema name a project declares. Defaults to `spec-driven`, which is
 /// what the CLI itself assumes when `config.yaml` omits the key.
 pub fn schema_name(root: &Path) -> String {
-    let path = root.join("openspec").join("config.yaml");
-    std::fs::read_to_string(path)
-        .ok()
-        .and_then(|text| serde_yaml_ng::from_str::<Config>(&text).ok())
+    read_config(root)
         .and_then(|c| c.schema)
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
@@ -249,6 +261,36 @@ artifacts:
         std::fs::create_dir_all(&os).unwrap();
         std::fs::write(os.join("config.yaml"), "schema: custom-flow\n").unwrap();
         assert_eq!(schema_name(dir.path()), "custom-flow");
+    }
+
+    #[test]
+    fn reads_the_project_context_out_of_the_config() {
+        let dir = tempfile::tempdir().unwrap();
+        let os = dir.path().join("openspec");
+        std::fs::create_dir_all(&os).unwrap();
+        std::fs::write(
+            os.join("config.yaml"),
+            "schema: spec-driven\n\ncontext: |\n  Tech stack: Rust, TypeScript\n  We use conventional commits\n",
+        )
+        .unwrap();
+
+        let context = project_context(dir.path()).unwrap();
+        assert!(context.starts_with("Tech stack: Rust, TypeScript"));
+        assert!(context.contains("conventional commits"));
+        assert!(!context.ends_with('\n'), "trimmed");
+    }
+
+    #[test]
+    fn has_no_context_when_the_config_does_not_set_one() {
+        let dir = tempfile::tempdir().unwrap();
+        let os = dir.path().join("openspec");
+        std::fs::create_dir_all(&os).unwrap();
+        // The scaffolded config comments the key out rather than setting it.
+        std::fs::write(os.join("config.yaml"), "schema: spec-driven\n# context: |\n#   ...\n").unwrap();
+        assert_eq!(project_context(dir.path()), None);
+
+        std::fs::write(os.join("config.yaml"), "schema: x\ncontext: \"   \"\n").unwrap();
+        assert_eq!(project_context(dir.path()), None, "blank is no context");
     }
 
     #[test]

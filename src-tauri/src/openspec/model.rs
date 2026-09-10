@@ -221,6 +221,8 @@ pub struct ProjectTree {
     pub root: String,
     pub name: String,
     pub schema: SchemaInfo,
+    /// The project's own description of itself, from `config.yaml`.
+    pub context: Option<String>,
     pub source: SourceKind,
     /// Non-fatal problems worth showing the reader.
     pub warnings: Vec<String>,

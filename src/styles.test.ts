@@ -207,13 +207,15 @@ describe("project overview", () => {
     expect(rule(".row--home")).toContain("font-weight: 600");
   });
 
-  it("lays specs out in columns that reflow", () => {
-    expect(rule(".home__specs")).toContain("auto-fill");
+  it("keeps the three counts on one row", () => {
+    expect(rule(".cards")).toContain("repeat(3, minmax(0, 1fr))");
   });
 
-  it("marks the selected count card with the accent, as elsewhere", () => {
-    expect(rule('.card[aria-pressed="true"]')).toContain("var(--accent-strong)");
-    expect(rule(".cards")).toContain("auto-fit");
+  it("reads the counts as a readout, with no interactive state", () => {
+    // Navigation belongs to the sidebar; a card that looked clickable but was
+    // not would be worse than a plain number.
+    expect(css).not.toContain('.card[aria-pressed');
+    expect(css).not.toContain(".card:hover");
   });
 
   it("keeps the primary action at the trailing edge", () => {

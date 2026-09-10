@@ -58,6 +58,7 @@ function tree(): ProjectTree {
     root: "/p",
     name: "demo",
     schema: { name: "spec-driven", description: null, artifacts: [], assumed: false },
+    context: null,
     source: "cli",
     warnings: [],
     docCount: 7,

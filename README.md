@@ -79,11 +79,14 @@ editor refreshes in place, keeping your scroll position.
 
 ## The project overview
 
-Opening a project shows its overview, not a file. Three counts — active
-changes, open specs, archived — and whichever you pick is what the list beneath
-shows: changes with the step each is on, specs with their requirement counts,
-or the archive by date. The numbers are the selector, so they lead somewhere
-rather than decorating.
+Opening a project shows its overview, not a file: three counts — active
+changes, open specs, archived — and then the project's own words about itself,
+which is the `context` block from `openspec/config.yaml`. That prose exists to
+brief an agent on the stack, conventions and domain, and it briefs a person
+just as well.
+
+The counts are a readout, not a control. Navigation belongs to the sidebar, and
+a card that looks clickable but is not would be worse than a plain number.
 
 `config.yaml` used to open by default, which was an accident of it being first
 in the reading order rather than a decision — it is the least interesting file

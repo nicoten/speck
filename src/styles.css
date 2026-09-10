@@ -979,7 +979,7 @@ button {
    that leads somewhere, rather than a number for its own sake. */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 22px 0 6px;
 }
@@ -992,10 +992,6 @@ button {
   border-radius: 5px;
   background: var(--paper-raised);
   text-align: left;
-}
-
-.card:hover {
-  border-color: var(--rule-strong);
 }
 
 .card__label {
@@ -1017,92 +1013,14 @@ button {
   color: var(--ink-faint);
 }
 
-/* Selected: the accent means "this is what you are looking at", as it does
-   everywhere else in the app. */
-.card[aria-pressed="true"] {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
-}
-
-.card[aria-pressed="true"] .card__label,
-.card[aria-pressed="true"] .card__note {
-  color: var(--paper-raised);
-  opacity: 0.85;
-}
-
-.card[aria-pressed="true"] .card__count {
-  color: var(--paper-raised);
-}
-
-.home__changes {
-  list-style: none;
+.home__context {
   margin: 0;
-  padding: 0;
+  max-width: none;
 }
 
-.home__change {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  width: 100%;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--rule);
-  text-align: left;
-}
-
-.home__change:hover .home__change-name {
-  color: var(--accent-strong);
-}
-
-.home__change-name {
+.home__nocontext code {
   font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.home__change-standing {
-  flex: 1;
-  font-family: var(--sans);
-  font-size: 12.5px;
-  color: var(--ink-muted);
-}
-
-.home__specs {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0 20px;
-}
-
-.home__spec {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--rule);
-  font-family: var(--mono);
-  font-size: 12.5px;
-  text-align: left;
-  color: var(--ink-muted);
-}
-
-.home__spec:hover {
-  color: var(--ink);
-}
-
-.home__spec span:first-child {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.home__spec-count {
-  font-size: 11px;
-  color: var(--ink-faint);
+  font-size: 11.5px;
 }
 
 /* -------------------------------------------------------------- dashboard */

@@ -314,6 +314,7 @@ pub fn build(
             .map(|s| s.to_string_lossy().to_string())
             .unwrap_or_else(|| root.to_string_lossy().to_string()),
         schema,
+        context: None,
         source,
         warnings,
         sections,

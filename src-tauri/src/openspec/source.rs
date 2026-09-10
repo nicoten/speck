@@ -117,16 +117,15 @@ pub fn load(root: &Path) -> Result<ProjectTree> {
     let mut warnings = Vec::new();
     let schema = schema::resolve(root, &mut warnings);
 
+    let context = schema::project_context(root);
+
     if cli::binary().is_some() {
         match cli_facts(root, &schema, &mut warnings) {
             Ok(facts) => {
-                return Ok(tree::build(
-                    root,
-                    schema,
-                    &facts,
-                    SourceKind::Cli,
-                    warnings,
-                ))
+                let mut tree =
+                    tree::build(root, schema, &facts, SourceKind::Cli, warnings);
+                tree.context = context;
+                return Ok(tree);
             }
             Err(e) => warnings.push(format!(
                 "The openspec CLI could not be read ({e}); showing results from the built-in scanner."
@@ -140,11 +139,7 @@ pub fn load(root: &Path) -> Result<ProjectTree> {
     }
 
     let facts = fs_scan::facts(root, &schema);
-    Ok(tree::build(
-        root,
-        schema,
-        &facts,
-        SourceKind::Scanner,
-        warnings,
-    ))
+    let mut tree = tree::build(root, schema, &facts, SourceKind::Scanner, warnings);
+    tree.context = context;
+    Ok(tree)
 }

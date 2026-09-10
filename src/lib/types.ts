@@ -93,6 +93,8 @@ export interface ProjectTree {
   root: string;
   name: string;
   schema: SchemaInfo;
+  /** The project's own description of itself, from `config.yaml`. */
+  context: string | null;
   source: SourceKind;
   warnings: string[];
   sections: Section[];

@@ -451,15 +451,6 @@ export default function App() {
           <ViewBoundary key="home" what="project">
             <ProjectDashboard
               tree={tree}
-              onOpenDoc={(doc) => void openDoc(doc)}
-              onOpenChange={(name) => {
-                const section = tree.sections.find(
-                  (sec) =>
-                    (sec.kind === "activeChanges" || sec.kind === "archive") &&
-                    sec.items.some((c) => c.name === name),
-                );
-                if (section) showChange(section.kind, name);
-              }}
               onNewChange={() => {
                 setHandoff({ busy: false, error: null });
                 setRunRequest({ kind: "propose" });
