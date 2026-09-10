@@ -1119,7 +1119,7 @@ button {
   margin-bottom: 18px;
 }
 
-.dash__head > div {
+.dash__head > :first-child {
   flex: 1;
   min-width: 0;
 }
@@ -1127,6 +1127,7 @@ button {
 .dash__actions {
   display: flex;
   flex-wrap: wrap;
+  flex: none;
   gap: 8px;
   margin-left: auto;
 }

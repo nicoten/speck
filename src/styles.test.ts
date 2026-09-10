@@ -217,7 +217,12 @@ describe("project overview", () => {
   });
 
   it("keeps the primary action at the trailing edge", () => {
-    expect(rule(".dash__actions")).toContain("margin-left: auto");
+    const actions = rule(".dash__actions");
+    expect(actions).toContain("margin-left: auto");
+    // Without this it stretches instead: the heading's `flex: 1` rule used to
+    // match this element too, and out-specified it.
+    expect(actions).toContain("flex: none");
+    expect(css).not.toContain(".dash__head > div {");
   });
 });
 
