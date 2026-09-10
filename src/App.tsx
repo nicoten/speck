@@ -14,14 +14,12 @@ import { ProjectSwitcher } from "./components/ProjectSwitcher";
 import { Reader } from "./components/Reader";
 import { ReadingRail } from "./components/ReadingRail";
 import { Sidebar } from "./components/Sidebar";
-import { AgentPanel } from "./components/AgentPanel";
 import { ChangeDashboard } from "./components/ChangeDashboard";
 import { GitHubMark } from "./components/GitHubMark";
 import { ViewBoundary } from "./components/ViewBoundary";
 import { ConfirmRun, type RunKind, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
-import { runningFor, startSession, stopSession, useAgentSessions } from "./lib/agent";
 import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updates";
 
 const RAIL_WIDTH = "speck:rail-width";
@@ -57,7 +55,6 @@ export default function App() {
     busy: false,
     error: null,
   });
-  const { sessions, add: addSession, dismiss: dismissSession } = useAgentSessions();
 
   const openPathRef = useRef<string | null>(null);
   openPathRef.current = openPath;
@@ -244,24 +241,15 @@ export default function App() {
 
   // ------------------------------------------------------- agent handoff
 
-  // Apply and propose are agent workflows, not CLI commands, so both start a
-  // Claude session. In-app runs stream their activity to the panel; the
-  // terminal option hands off to a session Speck does not watch. Either way the
-  // agent's real progress arrives through the watcher, as ticked tasks.
+  // These are agent workflows, not CLI commands, so Speck hands them to a
+  // Claude session in the terminal — where each step can be approved as it
+  // happens. Progress comes back through the watcher, as ticked tasks.
   const beginRun = useCallback(
-    async (opts: {
-      action: ipc.AgentAction;
-      terminal: boolean;
-    }): Promise<boolean> => {
+    async (action: ipc.AgentAction): Promise<boolean> => {
       if (!tree) return false;
       setHandoff({ busy: true, error: null });
       try {
-        const started = await startSession(
-          tree.root,
-          opts.action,
-          opts.terminal ? "terminal" : "inApp",
-        );
-        if (started) addSession(started);
+        await ipc.startAgentSession(tree.root, action);
         setHandoff({ busy: false, error: null });
         return true;
       } catch (e) {
@@ -269,20 +257,18 @@ export default function App() {
         return false;
       }
     },
-    [tree, addSession],
+    [tree],
   );
 
   const confirmRun = useCallback(
-    async (opts: { idea?: string; terminal: boolean }) => {
+    async (opts: { idea?: string }) => {
       if (!runRequest) return;
       const { kind, change } = runRequest;
       const action: ipc.AgentAction =
         kind === "propose"
           ? { kind: "propose", idea: opts.idea ?? "" }
           : { kind, change: change ?? "" };
-      if (await beginRun({ action, terminal: opts.terminal })) {
-        setRunRequest(null);
-      }
+      if (await beginRun(action)) setRunRequest(null);
     },
     [runRequest, beginRun],
   );
@@ -292,9 +278,6 @@ export default function App() {
     setHandoff({ busy: false, error: null });
     setRunRequest({ kind, change });
   }, []);
-
-  const activeSession = tree ? runningFor(sessions, tree.root) : undefined;
-  const panelSession = activeSession ?? sessions.find((s) => s.root === tree?.root);
 
   // ---------------------------------------------------------- navigation
 
@@ -461,7 +444,7 @@ export default function App() {
                 ? (kind) => askToRun(kind, dashboard.name)
                 : undefined
             }
-            applying={activeSession !== undefined}
+            applying={handoff.busy}
             refreshKey={treeVersion}
             root={tree.root}
           />
@@ -473,21 +456,13 @@ export default function App() {
             error={docError ?? handoff.error ?? error}
             onOpen={(doc) => void openDoc(doc)}
             onApply={(change) => askToRun("apply", change)}
-            applying={activeSession !== undefined}
+            applying={handoff.busy}
             onToggleTask={(path, text, occurrence, done) =>
               void toggleTask(path, text, occurrence, done)
             }
           />
         )}
       </div>
-
-      {panelSession && (
-        <AgentPanel
-          session={panelSession}
-          onStop={() => void stopSession(panelSession.id).catch(() => {})}
-          onDismiss={() => dismissSession(panelSession.id)}
-        />
-      )}
 
       {runRequest && (
         <ConfirmRun

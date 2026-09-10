@@ -143,6 +143,69 @@ an arbitrary URL handed to it.
 
 ## Running OpenSpec workflows
 
+The whole OpenSpec circle starts from the app. `+` beside **Active changes**
+proposes one; a change's dashboard carries **Apply**, **Verify** and
+**Archive**. None of these is a plain CLI command — `openspec instructions
+apply --json` produces a brief, and an agent carries it out.
+
+So Speck hands off rather than driving. It writes a short script to the OS temp
+directory and asks the system to open it, which starts a Claude session in your
+terminal, in the project root. The work happens where you can watch it and
+approve each step, and Speck's own guarantee is untouched. Progress comes back
+on its own: the agent ticks boxes in `tasks.md`, the watcher notices, and
+`Tasks 3/14` climbs in the sidebar while you read.
+
+Emphasis follows the workflow rather than sitting still: Apply leads while
+tasks remain, Verify leads once they are all ticked, and Archive stays quiet
+because it rewrites your main specs and moves the change. Archive is also the
+one that asks questions — how to merge the delta specs into the main specs —
+which is another reason it belongs in a terminal.
+
+Two things keep the handoff narrow:
+
+- The webview asks for a **structured action** — apply, verify or archive a
+  named change, or propose an idea — never a command line. It cannot ask Speck
+  to run something else, and a change name is validated as a directory name
+  rather than trusted.
+- The prompt reaches the session **through a file** rather than interpolated
+  into a command, so an idea containing `$(...)` or backticks arrives as text.
+
+`propose` is planning-only by OpenSpec's own rules: it writes the proposal,
+specs, design and tasks, then stops. `apply` is the one that implements code.
+
+## Pull requests, and the repository
+
+OpenSpec records no pull request. There is no field for one, nothing in the CLI
+knows about branches, and a change's `.openspec.yaml` holds workflow flags, not
+links. So any link is **inference**, and Speck says so rather than presenting a
+guess as a recorded fact.
+
+Two strategies, in order:
+
+1. **A branch named after the change.** One call, exact where that convention
+   holds — but it is a convention, not a rule, and plenty of projects do not
+   follow it.
+2. **Pull requests containing commits that touched the change's own files**
+   (`openspec/changes/<name>/`, and its dated path once archived). This works
+   whatever a project calls its branches, which is why it exists.
+
+The dashboard shows **all** of them, because a change is usually touched by more
+than one: proposing it, applying it, archiving it. Picking one would mean
+picking wrong — the most recent commit under an archived change is the *archive*
+commit, so "the latest pull request" is the one that filed it away, not the one
+that did the work.
+
+When neither strategy finds anything, the row says what was looked for. When
+`gh` is missing or not signed in, it says that instead of showing an empty
+space. Lookups are cached for a minute.
+
+The project's repository is read from `git remote get-url origin` and linked in
+the top bar. Credentials in a remote are stripped, so a token never reaches the
+screen. Links open only on that project's own forge host — the app will not open
+an arbitrary URL handed to it.
+
+## Running OpenSpec workflows
+
 The whole OpenSpec circle runs from the app. `+` beside **Active changes**
 proposes one; a change's dashboard carries **Apply**, **Verify** and
 **Archive**. None of these is a plain CLI command — `openspec instructions

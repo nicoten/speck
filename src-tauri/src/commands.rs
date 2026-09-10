@@ -1,7 +1,6 @@
 //! The IPC surface. Deliberately small: the webview loads a project, reads a
 //! document, and manages the library. Nothing here writes to a project.
 
-use crate::agent::session::{RunningSession, Sessions};
 use crate::agent::{self, AgentAction};
 use crate::forge::{PullRequestCache, PullRequestLookup, Repo};
 use crate::library::{Library, ProjectEntry};
@@ -21,7 +20,6 @@ pub struct AppState {
     pub library: Library,
     pub allowed: Allowed,
     pub watch: WatchState,
-    pub sessions: std::sync::Arc<Sessions>,
     pub pull_requests: PullRequestCache,
 }
 
@@ -31,7 +29,6 @@ impl AppState {
             library: Library::new(config_dir),
             allowed: Allowed::default(),
             watch: WatchState::default(),
-            sessions: std::sync::Arc::new(Sessions::default()),
             pull_requests: PullRequestCache::default(),
         }
     }
@@ -141,64 +138,6 @@ pub fn cli_info() -> Option<String> {
     openspec::cli::version()
 }
 
-/// Where the work should happen.
-#[derive(Debug, Clone, Copy, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Venue {
-    /// A session inside Speck, streaming its activity to the panel.
-    InApp,
-    /// A session in the user's terminal, which Speck does not watch.
-    Terminal,
-}
-
-/// Start an OpenSpec workflow for a project that is open.
-///
-/// The project must be one Speck has loaded, so this cannot be pointed at an
-/// arbitrary directory, and the action is structured rather than a command
-/// line. `InApp` runs without permission prompts — OpenSpec's workflows need to
-/// edit files and run commands, and a headless session has nobody to ask. The
-/// terminal venue is the one where each step can be approved.
-#[tauri::command]
-pub fn start_agent_session(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    path: String,
-    action: AgentAction,
-    venue: Venue,
-) -> CmdResult<Option<RunningSession>> {
-    let root = PathBuf::from(&path)
-        .canonicalize()
-        .map_err(|e| format!("{path}: {e}"))?;
-
-    if !state.allowed.0.lock().unwrap().contains(&root) {
-        return Err(format!("{} is not an open project", root.display()));
-    }
-
-    match venue {
-        Venue::Terminal => {
-            agent::start(&root, &action).map_err(to_string_err)?;
-            Ok(None)
-        }
-        Venue::InApp => {
-            let sessions = std::sync::Arc::clone(&state.sessions);
-            agent::session::start(app, sessions, &root, &action)
-                .map(Some)
-                .map_err(to_string_err)
-        }
-    }
-}
-
-#[tauri::command]
-pub fn stop_agent_session(state: State<'_, AppState>, id: String) -> CmdResult<()> {
-    state.sessions.stop(&id).map_err(to_string_err)
-}
-
-/// Sessions still in flight, so the UI can rebuild its state after a reload.
-#[tauri::command]
-pub fn running_sessions(state: State<'_, AppState>) -> Vec<RunningSession> {
-    state.sessions.running()
-}
-
 /// Tick a task off, or un-tick it.
 ///
 /// The only write this app makes to a project: one character on one line of a
@@ -224,6 +163,29 @@ pub fn set_task_done(
     drop(allowed);
 
     crate::tasks::set_done(&file, &text, occurrence, done).map_err(to_string_err)
+}
+
+/// Start an OpenSpec workflow for a project that is open.
+///
+/// Speck hands the work to a Claude session in the user's terminal rather than
+/// running it: these are agent workflows, and the terminal is where each step
+/// can be approved as it happens. The project must be one Speck has loaded, and
+/// the action is structured rather than a command line.
+#[tauri::command]
+pub fn start_agent_session(
+    state: State<'_, AppState>,
+    path: String,
+    action: AgentAction,
+) -> CmdResult<()> {
+    let root = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| format!("{path}: {e}"))?;
+
+    if !state.allowed.0.lock().unwrap().contains(&root) {
+        return Err(format!("{} is not an open project", root.display()));
+    }
+    agent::start(&root, &action).map_err(to_string_err)?;
+    Ok(())
 }
 
 /// Require that a path is a project Speck has open.

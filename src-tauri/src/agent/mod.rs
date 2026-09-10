@@ -10,9 +10,6 @@
 //! The webview asks for an [`AgentAction`], never a command line: it can name a
 //! change or describe an idea, and nothing else.
 
-pub mod event;
-pub mod session;
-
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -61,16 +58,6 @@ impl AgentAction {
                 }
                 Ok(format!("/opsx:propose {idea}"))
             }
-        }
-    }
-
-    /// How the UI names this run.
-    pub fn label(&self) -> String {
-        match self {
-            AgentAction::Apply { change } => format!("Applying {change}"),
-            AgentAction::Verify { change } => format!("Verifying {change}"),
-            AgentAction::Archive { change } => format!("Archiving {change}"),
-            AgentAction::Propose { .. } => "Planning a change".to_string(),
         }
     }
 
@@ -223,23 +210,6 @@ mod tests {
             .prompt()
             .unwrap(),
             "/opsx:archive report-toolbar"
-        );
-    }
-
-    #[test]
-    fn labels_every_action_for_the_panel() {
-        let change = "add-auth".to_string();
-        assert_eq!(
-            AgentAction::Apply { change: change.clone() }.label(),
-            "Applying add-auth"
-        );
-        assert_eq!(
-            AgentAction::Verify { change: change.clone() }.label(),
-            "Verifying add-auth"
-        );
-        assert_eq!(
-            AgentAction::Archive { change }.label(),
-            "Archiving add-auth"
         );
     }
 

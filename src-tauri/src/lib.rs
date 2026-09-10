@@ -28,8 +28,6 @@ pub fn run() {
             commands::library_remove,
             commands::cli_info,
             commands::start_agent_session,
-            commands::stop_agent_session,
-            commands::running_sessions,
             commands::set_task_done,
             commands::project_repo,
             commands::change_pull_request,

@@ -69,8 +69,7 @@ export const cliInfo = () => invoke<string | null>("cli_info");
  * Hand an OpenSpec workflow to a Claude session in the user's terminal.
  *
  * The action is structured rather than a command line: the app can name a
- * change or describe an idea, and nothing else. Resolves to the prompt that was
- * handed over.
+ * change or describe an idea, and nothing else.
  */
 export type AgentAction =
   | { kind: "apply"; change: string }
@@ -93,7 +92,7 @@ export const setTaskDone = (
 ) => invoke<void>("set_task_done", { path, text, occurrence, done });
 
 export const startAgentSession = (path: string, action: AgentAction) =>
-  invoke<string>("start_agent_session", { path, action });
+  invoke<void>("start_agent_session", { path, action });
 
 /** Fires when anything under the open project's `openspec/` directory changes. */
 export const onProjectChanged = (fn: (p: ChangedPayload) => void) =>

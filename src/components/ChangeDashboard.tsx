@@ -175,7 +175,6 @@ export function ChangeDashboard({
                 : (change.status ?? "active")}
               {progress && ` · ${progress} tasks`}
             </p>
-            <PullRequestLink root={root} change={change.name} />
           </div>
           {onRun && (
             <div className="dash__actions">
@@ -209,6 +208,10 @@ export function ChangeDashboard({
             </div>
           )}
         </header>
+
+        {/* Its own row: sharing the header meant competing with three buttons
+            for width, which truncated the title while the page had room. */}
+        <PullRequestLink root={root} change={change.name} />
 
         <ChangeProgress
           change={change}

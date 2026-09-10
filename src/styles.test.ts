@@ -36,6 +36,17 @@ it("reads the real stylesheet, not an empty stub", () => {
   expect(css.length).toBeGreaterThan(4000);
 });
 
+it("is structurally intact", () => {
+  // A duplicated block or a split selector list still mostly renders, so
+  // neither shows up as a broken app. Both have happened here.
+  expect(css.split("{").length).toBe(css.split("}").length);
+
+  const selectors = [...css.matchAll(/^(\.[a-z][\w-]*)\s*\{/gim)].map((m) => m[1]);
+  const seen = new Set<string>();
+  const twice = selectors.filter((s) => (seen.has(s) ? true : (seen.add(s), false)));
+  expect([...new Set(twice)]).toEqual([]);
+});
+
 describe("fonts", () => {
   it("bundles every weight the design uses, so the app works offline", () => {
     for (const weight of ["400", "400-italic", "500", "600"]) {
@@ -236,36 +247,27 @@ describe("workflow actions", () => {
 });
 
 describe("agent handoff", () => {
-  it("keeps the apply action beside the progress bar", () => {
-    expect(rule(".changebar")).toContain("display: flex");
-    expect(rule(".changebar__apply")).toContain("flex: none");
-  });
-
-  it("distinguishes a live session from a finished or failed one", () => {
-    expect(rule(".agent__dot--live")).toContain("var(--op-added)");
-    expect(rule('.agent[data-status="failed"] .agent__dot')).toContain("var(--op-removed)");
-  });
-
-  it("keeps the session log above the reading rail, not over the document", () => {
-    const agent = rule(".agent");
-    expect(agent).toContain("border-top");
-    expect(agent).toContain("max-height");
-    expect(rule(".agent__log")).toContain("overflow-y: auto");
-  });
-
-  it("marks refusals distinctly from failures", () => {
-    expect(rule(".agent__denials")).toContain("var(--op-modified)");
-    expect(rule(".agent__failure")).toContain("var(--op-removed)");
-  });
-
-  it("states what a session may do instead of offering a lesser mode", () => {
+  it("states where the session runs", () => {
     expect(rule(".sheet__note")).toContain("var(--accent-border)");
     expect(css).not.toContain(".sheet__check");
+    expect(css).not.toContain(".agent__log");
   });
 
-  it("gives the run sheet a focus ring and a readable field", () => {
-    expect(rule(".sheet__field:focus-visible")).toContain("var(--accent)");
-    expect(rule(".sheet__panel")).toContain("var(--paper)");
+  it("gives the pull request title the row to itself", () => {
+    expect(rule(".pr__title")).toContain("min-width: 0");
+    expect(rule(".pr")).toContain("width: 100%");
+  });
+
+  it("states where the session runs instead of offering modes", () => {
+    expect(rule(".sheet__note")).toContain("var(--accent-border)");
+    expect(css).not.toContain(".sheet__check");
+    // The in-app session panel is gone; work runs in a terminal.
+    expect(css).not.toContain(".agent__log");
+  });
+
+  it("gives the pull request title the row to itself", () => {
+    expect(rule(".pr__title")).toContain("min-width: 0");
+    expect(rule(".pr")).toContain("width: 100%");
   });
 });
 

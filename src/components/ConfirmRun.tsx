@@ -9,10 +9,7 @@ export interface RunRequest {
 }
 
 /** What each workflow does, in terms of what it will change. */
-const COPY: Record<
-  RunKind,
-  { title: (change: string) => string; lede: ReactNode; preferTerminal: boolean }
-> = {
+const COPY: Record<RunKind, { title: (change: string) => string; lede: ReactNode }> = {
   propose: {
     title: () => "Plan a new change",
     lede: (
@@ -21,7 +18,6 @@ const COPY: Record<
         and tasks, then stops — planning only, no code.
       </>
     ),
-    preferTerminal: false,
   },
   apply: {
     title: (change) => `Apply ${change}`,
@@ -31,7 +27,6 @@ const COPY: Record<
         , ticking them off as it goes.
       </>
     ),
-    preferTerminal: false,
   },
   verify: {
     title: (change) => `Verify ${change}`,
@@ -42,7 +37,6 @@ const COPY: Record<
         reads, runs checks and reports; it is not meant to change your code.
       </>
     ),
-    preferTerminal: false,
   },
   archive: {
     title: (change) => `Archive ${change}`,
@@ -50,11 +44,9 @@ const COPY: Record<
       <>
         Archiving folds this change's delta specs into the main specs and moves
         it into the archive. The workflow <strong>asks how to merge</strong>{" "}
-        first, so it is better run in your terminal where you can answer — run
-        here and Claude decides alone.
+        first, so answer it in the terminal before it does anything.
       </>
     ),
-    preferTerminal: true,
   },
 };
 
@@ -72,7 +64,7 @@ export function ConfirmRun({
   busy,
 }: {
   request: RunRequest;
-  onStart: (opts: { idea?: string; terminal: boolean }) => void;
+  onStart: (opts: { idea?: string }) => void;
   onCancel: () => void;
   error: string | null;
   busy: boolean;
@@ -90,30 +82,10 @@ export function ConfirmRun({
   }, [onCancel, busy]);
 
   const ready = !needsIdea || idea.trim().length > 0;
-  const start = (terminal: boolean) => {
+  const start = () => {
     if (!ready || busy) return;
-    onStart({ idea: needsIdea ? idea.trim() : undefined, terminal });
+    onStart({ idea: needsIdea ? idea.trim() : undefined });
   };
-
-  const here = (
-    <button
-      className={`button${copy.preferTerminal ? " button--quiet" : ""}`}
-      onClick={() => start(false)}
-      disabled={busy || !ready}
-    >
-      {busy ? "Starting…" : "Run here"}
-    </button>
-  );
-  const terminal = (
-    <button
-      className={`button${copy.preferTerminal ? "" : " button--quiet"}`}
-      onClick={() => start(true)}
-      disabled={busy || !ready}
-      title="Speck does not watch a session it does not run"
-    >
-      {busy ? "Starting…" : "Run in my terminal"}
-    </button>
-  );
 
   return (
     <div
@@ -133,18 +105,16 @@ export function ConfirmRun({
             value={idea}
             onChange={(e) => setIdea(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) start(false);
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) start();
             }}
             rows={5}
             placeholder="Add a CSV export to the report toolbar, so a subscriber can take a statement into a spreadsheet."
           />
         )}
 
-        {/* Said once, plainly. There is no lesser mode worth offering: refusing
-            commands does not make a session safer, it makes it fail halfway. */}
         <p className="sheet__note">
-          Running here, Claude edits files and runs commands in this project
-          without asking. You can stop it from the panel at any point.
+          Claude opens in your terminal, in this project, and asks before each
+          step it takes.
         </p>
 
         {error && (
@@ -153,23 +123,13 @@ export function ConfirmRun({
           </p>
         )}
 
-        {/* The recommended venue is the primary button, which for archive is
-            the terminal: its questions need somewhere to be asked. */}
         <div className="sheet__actions">
           <button className="button button--quiet" onClick={onCancel} disabled={busy}>
             Cancel
           </button>
-          {copy.preferTerminal ? (
-            <>
-              {here}
-              {terminal}
-            </>
-          ) : (
-            <>
-              {terminal}
-              {here}
-            </>
-          )}
+          <button className="button" onClick={start} disabled={busy || !ready}>
+            {busy ? "Opening terminal…" : "Run in terminal"}
+          </button>
         </div>
       </div>
     </div>

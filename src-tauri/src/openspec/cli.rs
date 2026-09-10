@@ -15,7 +15,6 @@ use std::time::Duration;
 /// How to invoke a tool: the binary, plus the `PATH` its child process needs.
 /// Resolved once per tool.
 static OPENSPEC: OnceLock<Option<Resolved>> = OnceLock::new();
-static CLAUDE: OnceLock<Option<Resolved>> = OnceLock::new();
 static GH: OnceLock<Option<Resolved>> = OnceLock::new();
 
 #[derive(Debug, Clone)]
@@ -66,11 +65,6 @@ const SHELL_TIMEOUT: Duration = Duration::from_secs(5);
 /// into every call.
 pub fn resolved() -> Option<&'static Resolved> {
     OPENSPEC.get_or_init(|| resolve("openspec")).as_ref()
-}
-
-/// The `claude` binary, for handing work to a session.
-pub fn claude() -> Option<&'static Resolved> {
-    CLAUDE.get_or_init(|| resolve("claude")).as_ref()
 }
 
 /// The `gh` binary, for asking GitHub about a change's pull request.
