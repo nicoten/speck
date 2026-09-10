@@ -139,9 +139,18 @@ describe("update notice", () => {
 
 describe("change dashboard", () => {
   it("separates the caret from the name in a change row", () => {
-    expect(rule(".disclosure--button")).toContain("cursor: pointer");
     expect(rule(".row__name")).toContain("flex: 1");
     expect(rule(".row--selected")).toContain("var(--accent)");
+  });
+
+  it("gives the caret a hit target and keeps it off the window edge", () => {
+    const caret = rule(".disclosure");
+    expect(caret).toContain("cursor: pointer");
+    // Small carets in a dense tree are the easiest thing in a sidebar to miss.
+    for (const dimension of ["width: 22px", "height: 22px"]) {
+      expect(caret).toContain(dimension);
+    }
+    expect(rule(".row--split")).toMatch(/padding:[^;]*8px/);
   });
 
   it("holds the dashboard to a measure and marks the step in hand", () => {

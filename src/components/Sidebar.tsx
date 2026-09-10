@@ -70,7 +70,7 @@ function Change({
           change's documents, the name opens the change itself. */}
       <div className={`row row--split${selected ? " row--selected" : ""}`}>
         <button
-          className="disclosure disclosure--button"
+          className="disclosure"
           onClick={() => onToggle(key)}
           aria-expanded={isOpen}
           aria-label={`${isOpen ? "Collapse" : "Expand"} ${change.name}`}

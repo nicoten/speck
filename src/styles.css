@@ -417,23 +417,14 @@ button {
 /* A change row is two controls: the caret shows its documents, the name opens
    the change. They are separate because they do separate things. */
 .row--split {
-  padding: 0 14px 0 0;
+  gap: 3px;
+  padding: 0 14px 0 8px;
 }
 
 .row--selected {
   background: var(--paper-raised);
   border-left-color: var(--accent);
   font-weight: 600;
-}
-
-.disclosure--button {
-  padding: 3px 0;
-  flex: none;
-  cursor: pointer;
-}
-
-.disclosure--button:hover {
-  color: var(--ink);
 }
 
 .row__name {
@@ -479,12 +470,25 @@ button {
   font-weight: 400;
 }
 
+/* Big enough to hit without aiming. A 22px square is the smallest that still
+   feels like a target at this row height. */
 .disclosure {
-  width: 12px;
   flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 3px;
   color: var(--ink-faint);
-  font-size: 9px;
-  text-align: center;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.disclosure:hover {
+  /* The row is already lifted on hover, so the caret goes the other way. */
+  background: var(--paper-sunk);
+  color: var(--ink);
 }
 
 /* The step rail: a change's schema steps, threaded. */
