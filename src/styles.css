@@ -1714,14 +1714,6 @@ button {
   font-weight: 600;
 }
 
-.agent__authority {
-  font-size: 10.5px;
-  color: var(--ink-muted);
-  border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  padding: 1px 7px;
-}
-
 .agent__spacer {
   flex: 1;
 }
@@ -1847,26 +1839,14 @@ button {
   color: var(--ink-faint);
 }
 
-.sheet__check {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-top: 14px;
+.sheet__note {
+  margin: 14px 0 0;
+  padding: 9px 12px;
+  border-left: 2px solid var(--accent-border);
+  background: var(--paper-raised);
   font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.sheet__check input {
-  margin-top: 2px;
-  accent-color: var(--accent-strong);
-}
-
-.sheet__check-why {
-  display: block;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: var(--ink-muted);
 }
 
@@ -2005,14 +1985,6 @@ button {
   font-weight: 600;
 }
 
-.agent__authority {
-  font-size: 10.5px;
-  color: var(--ink-muted);
-  border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  padding: 1px 7px;
-}
-
 .agent__spacer {
   flex: 1;
 }
@@ -2138,26 +2110,14 @@ button {
   color: var(--ink-faint);
 }
 
-.sheet__check {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-top: 14px;
+.sheet__note {
+  margin: 14px 0 0;
+  padding: 9px 12px;
+  border-left: 2px solid var(--accent-border);
+  background: var(--paper-raised);
   font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.sheet__check input {
-  margin-top: 2px;
-  accent-color: var(--accent-strong);
-}
-
-.sheet__check-why {
-  display: block;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: var(--ink-muted);
 }
 

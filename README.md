@@ -166,24 +166,17 @@ Progress also arrives by itself, and that is the more reliable signal: the agent
 ticks boxes in `tasks.md`, the watcher notices, and `Tasks 3/14` climbs in the
 sidebar while you read.
 
-### Authority
+### Permissions
 
-The confirmation offers two levels, described by what they do rather than the
-flags they map to:
+An in-app session runs with permission prompts off. That is not a shortcut:
+OpenSpec's workflows edit files *and* run commands — apply works through tasks
+that build and test, verify runs checks, archive moves directories — and a
+headless session has nobody to answer a prompt. Refusing commands does not make
+a run safer, it makes it fail halfway and hand back a list of refusals.
 
-| Choice | Permission mode | Effect |
-| --- | --- | --- |
-| Edits only (default) | `acceptEdits` | Files are edited without asking. Commands are refused, and the refusals are listed when the run ends. |
-| Edits and commands | `bypassPermissions` | Nothing is asked and nothing refused. Needed when a change's tasks build or test. |
-
-Refusals are reported rather than swallowed, because a denied `Bash` call is
-usually why an apply stalled halfway.
-
-`propose` is planning-only by OpenSpec's own rules: it writes the proposal,
-specs, design and tasks, then stops. `apply` is the one that implements code.
-
-One session per project at a time — two agents editing one repository would each
-be working from a tree the other is changing underneath it.
+So the choice is not which tools a session may use. It is **where it runs**: in
+the app, where you watch a log and can stop it, or in your terminal, where each
+step is approved before it happens. The confirmation says which you are getting.
 
 ### Running in a terminal instead
 

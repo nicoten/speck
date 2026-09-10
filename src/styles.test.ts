@@ -258,6 +258,11 @@ describe("agent handoff", () => {
     expect(rule(".agent__failure")).toContain("var(--op-removed)");
   });
 
+  it("states what a session may do instead of offering a lesser mode", () => {
+    expect(rule(".sheet__note")).toContain("var(--accent-border)");
+    expect(css).not.toContain(".sheet__check");
+  });
+
   it("gives the run sheet a focus ring and a readable field", () => {
     expect(rule(".sheet__field:focus-visible")).toContain("var(--accent)");
     expect(rule(".sheet__panel")).toContain("var(--paper)");

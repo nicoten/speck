@@ -11,12 +11,12 @@ import type { AgentAction } from "./ipc";
 
 export const AGENT_EVENT = "agent://event";
 
-/** How much the run is allowed to do. */
-export type Authority = "edits" | "editsAndCommands";
-
-export type Venue =
-  | { inApp: { authority: Authority } }
-  | "terminal";
+/**
+ * Where the work happens. In-app sessions run without permission prompts —
+ * OpenSpec's workflows edit files and run commands, and a headless session has
+ * nobody to ask — so the terminal is the venue where each step is approved.
+ */
+export type Venue = "inApp" | "terminal";
 
 export type AgentEvent =
   | { kind: "started"; sessionId: string; model: string | null; permissionMode: string | null }
@@ -40,7 +40,6 @@ export interface RunningSession {
   id: string;
   root: string;
   label: string;
-  authority: Authority;
 }
 
 export interface LogLine {
@@ -187,7 +186,6 @@ export function useAgentSessions() {
             id: payload.id,
             root: payload.root,
             label: "Session",
-            authority: "edits",
             status: "running",
             lines: [],
           };

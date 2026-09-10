@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Authority } from "../lib/agent";
 
 export type RunKind = "propose" | "apply" | "verify" | "archive";
 
@@ -29,8 +28,7 @@ const COPY: Record<
     lede: (
       <>
         Claude works through this change's tasks in <strong>this project</strong>
-        , editing files without asking, and ticking them off as it goes. You can
-        stop it at any point.
+        , ticking them off as it goes.
       </>
     ),
     preferTerminal: false,
@@ -41,7 +39,7 @@ const COPY: Record<
       <>
         Claude checks the implementation against this change's specs and reports
         what it finds — which requirements it can and cannot account for. It
-        reads and reports; it is not meant to change your code.
+        reads, runs checks and reports; it is not meant to change your code.
       </>
     ),
     preferTerminal: false,
@@ -74,7 +72,7 @@ export function ConfirmRun({
   busy,
 }: {
   request: RunRequest;
-  onStart: (opts: { idea?: string; authority: Authority; terminal: boolean }) => void;
+  onStart: (opts: { idea?: string; terminal: boolean }) => void;
   onCancel: () => void;
   error: string | null;
   busy: boolean;
@@ -82,7 +80,6 @@ export function ConfirmRun({
   const copy = COPY[request.kind];
   const needsIdea = request.kind === "propose";
   const [idea, setIdea] = useState("");
-  const [commands, setCommands] = useState(false);
   const field = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -95,11 +92,7 @@ export function ConfirmRun({
   const ready = !needsIdea || idea.trim().length > 0;
   const start = (terminal: boolean) => {
     if (!ready || busy) return;
-    onStart({
-      idea: needsIdea ? idea.trim() : undefined,
-      authority: commands ? "editsAndCommands" : "edits",
-      terminal,
-    });
+    onStart({ idea: needsIdea ? idea.trim() : undefined, terminal });
   };
 
   const here = (
@@ -147,20 +140,12 @@ export function ConfirmRun({
           />
         )}
 
-        <label className="sheet__check">
-          <input
-            type="checkbox"
-            checked={commands}
-            onChange={(e) => setCommands(e.target.checked)}
-          />
-          <span>
-            Also let it run commands
-            <span className="sheet__check-why">
-              needed if the work builds or tests; without this, commands are
-              refused and the refusals are reported
-            </span>
-          </span>
-        </label>
+        {/* Said once, plainly. There is no lesser mode worth offering: refusing
+            commands does not make a session safer, it makes it fail halfway. */}
+        <p className="sheet__note">
+          Running here, Claude edits files and runs commands in this project
+          without asking. You can stop it from the panel at any point.
+        </p>
 
         {error && (
           <p className="sheet__error" role="alert">

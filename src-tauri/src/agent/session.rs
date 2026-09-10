@@ -12,7 +12,7 @@
 use super::event::{parse_line, AgentEvent};
 use super::AgentAction;
 use anyhow::{anyhow, Context, Result};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -22,26 +22,15 @@ use tauri::{AppHandle, Emitter};
 
 pub const EVENT: &str = "agent://event";
 
-/// How much authority the run is given.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum Authority {
-    /// File edits go through without asking; anything else is refused, and the
-    /// refusals are reported when the run ends.
-    Edits,
-    /// Nothing is asked and nothing refused, including shell commands. Needed
-    /// for a change whose tasks run tests.
-    EditsAndCommands,
-}
-
-impl Authority {
-    fn permission_mode(self) -> &'static str {
-        match self {
-            Authority::Edits => "acceptEdits",
-            Authority::EditsAndCommands => "bypassPermissions",
-        }
-    }
-}
+/// The permission mode every in-app session runs with.
+///
+/// OpenSpec's workflows read and write files *and* run commands: apply works
+/// through tasks that build and test, verify runs checks, archive moves
+/// directories. Refusing commands does not make a session safer, it makes it
+/// fail halfway and hand back a list of refusals — so the choice is not which
+/// tools it may use, but whether it runs here or in a terminal where each step
+/// can be approved.
+const PERMISSION_MODE: &str = "bypassPermissions";
 
 /// What the UI needs to describe a run in flight.
 #[derive(Debug, Clone, Serialize)]
@@ -50,7 +39,6 @@ pub struct RunningSession {
     pub id: String,
     pub root: String,
     pub label: String,
-    pub authority: Authority,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -117,7 +105,6 @@ pub fn start(
     sessions: Arc<Sessions>,
     root: &Path,
     action: &AgentAction,
-    authority: Authority,
 ) -> Result<RunningSession> {
     if sessions.has_root(root) {
         return Err(anyhow!(
@@ -140,7 +127,7 @@ pub fn start(
             // stream-json requires it, and it is what carries tool calls.
             "--verbose",
             "--permission-mode",
-            authority.permission_mode(),
+            PERMISSION_MODE,
         ])
         .current_dir(root)
         // Without this the CLI waits three seconds for input that never comes.
@@ -161,7 +148,6 @@ pub fn start(
         id: id.clone(),
         root: root.to_string_lossy().to_string(),
         label: action.label(),
-        authority,
     };
 
     sessions
@@ -306,12 +292,10 @@ mod tests {
     }
 
     #[test]
-    fn maps_authority_onto_the_cli_permission_modes() {
-        assert_eq!(Authority::Edits.permission_mode(), "acceptEdits");
-        assert_eq!(
-            Authority::EditsAndCommands.permission_mode(),
-            "bypassPermissions"
-        );
+    fn runs_without_permission_prompts() {
+        // A headless session has nobody to ask, and OpenSpec's workflows need
+        // to run commands. The terminal venue is where approval lives.
+        assert_eq!(PERMISSION_MODE, "bypassPermissions");
     }
 
     #[test]
@@ -327,7 +311,6 @@ mod tests {
                     id: "s1".into(),
                     root: "/proj".into(),
                     label: "Applying add-auth".into(),
-                    authority: Authority::Edits,
                 },
             },
         );
@@ -353,7 +336,6 @@ mod tests {
                     id: "s1".into(),
                     root: "/proj".into(),
                     label: "Planning a change".into(),
-                    authority: Authority::EditsAndCommands,
                 },
             },
         );

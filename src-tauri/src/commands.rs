@@ -1,7 +1,7 @@
 //! The IPC surface. Deliberately small: the webview loads a project, reads a
 //! document, and manages the library. Nothing here writes to a project.
 
-use crate::agent::session::{Authority, RunningSession, Sessions};
+use crate::agent::session::{RunningSession, Sessions};
 use crate::agent::{self, AgentAction};
 use crate::forge::{PullRequestCache, PullRequestLookup, Repo};
 use crate::library::{Library, ProjectEntry};
@@ -146,7 +146,7 @@ pub fn cli_info() -> Option<String> {
 #[serde(rename_all = "camelCase")]
 pub enum Venue {
     /// A session inside Speck, streaming its activity to the panel.
-    InApp { authority: Authority },
+    InApp,
     /// A session in the user's terminal, which Speck does not watch.
     Terminal,
 }
@@ -155,8 +155,9 @@ pub enum Venue {
 ///
 /// The project must be one Speck has loaded, so this cannot be pointed at an
 /// arbitrary directory, and the action is structured rather than a command
-/// line. `InApp` gives the agent authority over the project — that is the
-/// point of it, and the panel says so while it runs.
+/// line. `InApp` runs without permission prompts — OpenSpec's workflows need to
+/// edit files and run commands, and a headless session has nobody to ask. The
+/// terminal venue is the one where each step can be approved.
 #[tauri::command]
 pub fn start_agent_session(
     app: AppHandle,
@@ -178,9 +179,9 @@ pub fn start_agent_session(
             agent::start(&root, &action).map_err(to_string_err)?;
             Ok(None)
         }
-        Venue::InApp { authority } => {
+        Venue::InApp => {
             let sessions = std::sync::Arc::clone(&state.sessions);
-            agent::session::start(app, sessions, &root, &action, authority)
+            agent::session::start(app, sessions, &root, &action)
                 .map(Some)
                 .map_err(to_string_err)
         }

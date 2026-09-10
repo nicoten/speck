@@ -21,13 +21,7 @@ import { ViewBoundary } from "./components/ViewBoundary";
 import { ConfirmRun, type RunKind, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
-import {
-  runningFor,
-  startSession,
-  stopSession,
-  useAgentSessions,
-  type Authority,
-} from "./lib/agent";
+import { runningFor, startSession, stopSession, useAgentSessions } from "./lib/agent";
 import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updates";
 
 const RAIL_WIDTH = "speck:rail-width";
@@ -257,7 +251,6 @@ export default function App() {
   const beginRun = useCallback(
     async (opts: {
       action: ipc.AgentAction;
-      authority: Authority;
       terminal: boolean;
     }): Promise<boolean> => {
       if (!tree) return false;
@@ -266,7 +259,7 @@ export default function App() {
         const started = await startSession(
           tree.root,
           opts.action,
-          opts.terminal ? "terminal" : { inApp: { authority: opts.authority } },
+          opts.terminal ? "terminal" : "inApp",
         );
         if (started) addSession(started);
         setHandoff({ busy: false, error: null });
@@ -280,14 +273,14 @@ export default function App() {
   );
 
   const confirmRun = useCallback(
-    async (opts: { idea?: string; authority: Authority; terminal: boolean }) => {
+    async (opts: { idea?: string; terminal: boolean }) => {
       if (!runRequest) return;
       const { kind, change } = runRequest;
       const action: ipc.AgentAction =
         kind === "propose"
           ? { kind: "propose", idea: opts.idea ?? "" }
           : { kind, change: change ?? "" };
-      if (await beginRun({ action, authority: opts.authority, terminal: opts.terminal })) {
+      if (await beginRun({ action, terminal: opts.terminal })) {
         setRunRequest(null);
       }
     },

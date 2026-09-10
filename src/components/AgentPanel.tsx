@@ -62,9 +62,6 @@ export function AgentPanel({
       <header className="agent__head">
         <span className={`agent__dot${running ? " agent__dot--live" : ""}`} aria-hidden="true" />
         <span className="agent__label">{session.label}</span>
-        <span className="agent__authority">
-          {session.authority === "editsAndCommands" ? "edits + commands" : "edits only"}
-        </span>
         <span className="agent__spacer" />
         {running ? (
           <button className="agent__action" onClick={onStop}>
