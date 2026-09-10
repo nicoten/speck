@@ -209,7 +209,7 @@ fn build_spec_tree(root: &Path, specs: &[SpecFacts]) -> Vec<SpecNode> {
     out
 }
 
-fn sort_spec_nodes(nodes: &mut Vec<SpecNode>) {
+fn sort_spec_nodes(nodes: &mut [SpecNode]) {
     nodes.sort_by(|a, b| a.label.cmp(&b.label));
     for n in nodes.iter_mut() {
         sort_spec_nodes(&mut n.children);

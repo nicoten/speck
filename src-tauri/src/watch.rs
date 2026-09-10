@@ -62,13 +62,9 @@ impl WatchState {
         let root_string = root.to_string_lossy().to_string();
 
         std::thread::spawn(move || {
-            loop {
-                // Block until something happens, then drain whatever else
-                // arrives inside the debounce window.
-                let first = match rx.recv() {
-                    Ok(ev) => ev,
-                    Err(_) => break,
-                };
+            // Block until something happens, then drain whatever else arrives
+            // inside the debounce window.
+            while let Ok(first) = rx.recv() {
                 if stop_rx.try_recv() == Err(mpsc::TryRecvError::Disconnected) {
                     break;
                 }

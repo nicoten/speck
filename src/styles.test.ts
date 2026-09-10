@@ -1,3 +1,4 @@
+/// <reference types="node" />
 // Structural guards for the stylesheet.
 //
 // Editing this file by text range has twice deleted rules that happened to sit

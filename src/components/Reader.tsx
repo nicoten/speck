@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Doc, DocContent, ProjectTree } from "../lib/types";
 import type { DocRef } from "../lib/order";
 import { ChangeProgress } from "./ChangeProgress";
+import { DocumentBoundary } from "./DocumentBoundary";
 import { CodeView, nonMarkdownLanguage } from "./CodeView";
 import { Outline } from "./Outline";
 import { SpecView } from "./SpecView";
@@ -98,7 +99,11 @@ export function Reader({ tree, ref_, content, error, onOpen }: Props) {
         >
           <article className="doc">
             <h1 className="doc__title">{title(ref_)}</h1>
-            <Body ref_={ref_} content={content} sourceLanguage={sourceLanguage} />
+            {/* Keyed on the path so moving to another document clears a
+                previous failure. */}
+            <DocumentBoundary key={content.path}>
+              <Body ref_={ref_} content={content} sourceLanguage={sourceLanguage} />
+            </DocumentBoundary>
           </article>
           {showOutline && <Outline markdown={content.markdown} />}
         </div>

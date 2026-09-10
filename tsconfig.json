@@ -10,7 +10,9 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "types": ["node"],
+    // No ambient @types in app code: a component must not be able to reach for
+    // node:fs and type-check. The one test that needs Node references it itself.
+    "types": [],
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",

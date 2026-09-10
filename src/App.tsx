@@ -30,6 +30,12 @@ export default function App() {
   const openPathRef = useRef<string | null>(null);
   openPathRef.current = openPath;
 
+  // The watcher subscribes once, so the open project is read from a ref rather
+  // than captured: making `tree` an effect dependency tore the listener down and
+  // rebuilt it on every reload, and a burst of writes could land in the gap.
+  const rootRef = useRef<string | null>(null);
+  rootRef.current = tree?.root ?? null;
+
   // ------------------------------------------------------------- loading
 
   /** Archived changes start collapsed; the live work is what you came for. */
@@ -116,22 +122,33 @@ export default function App() {
   // stale view is the expected failure. Reload the tree on any change, and the
   // open document when it is the file that moved.
   useEffect(() => {
-    const stop = ipc.onProjectChanged(async ({ root, paths }) => {
-      if (!tree || root !== tree.root) return;
-      const touched = openPathRef.current && paths.includes(openPathRef.current);
-      await openProject(root, true);
-      if (touched && openPathRef.current) {
-        try {
-          setContent(await ipc.readDoc(openPathRef.current));
-        } catch {
-          /* the refreshed tree already reflects the file going away */
+    let off: (() => void) | undefined;
+    let cancelled = false;
+
+    void ipc
+      .onProjectChanged(async ({ root, paths }) => {
+        if (root !== rootRef.current) return;
+        const touched =
+          openPathRef.current !== null && paths.includes(openPathRef.current);
+        await openProject(root, true);
+        if (touched && openPathRef.current) {
+          try {
+            setContent(await ipc.readDoc(openPathRef.current));
+          } catch {
+            /* the refreshed tree already reflects the file going away */
+          }
         }
-      }
-    });
+      })
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else off = unlisten;
+      });
+
     return () => {
-      void stop.then((off) => off());
+      cancelled = true;
+      off?.();
     };
-  }, [tree, openProject]);
+  }, [openProject]);
 
   const addProject = useCallback(async () => {
     const picked = await openDialog({

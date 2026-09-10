@@ -115,6 +115,14 @@ signature error that looks nothing like its cause.
 Releases signed by a new key fail verification against the public key compiled
 into installed copies, and every user has to reinstall by hand. Back it up.
 
+## The icon
+
+`assets/icon.svg` is the source; `src-tauri/icons/` is generated from it with
+`pnpm tauri icon assets/icon.png`. Weights in the SVG are chosen so the marks
+still separate at 32px — an earlier version looked right at 512px and turned to
+mush in a Finder list. The mobile icon sets that command also writes are deleted:
+this is a desktop app.
+
 ## Design
 
 Colour follows [openspec.dev](https://openspec.dev): warm paper, soft ink, and
