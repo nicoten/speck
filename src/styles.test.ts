@@ -181,6 +181,13 @@ describe("forge links", () => {
   it("marks the repository link as a link on hover", () => {
     expect(rule(".topbar__repo:hover")).toContain("var(--accent-strong)");
   });
+
+  it("keeps a degraded read visible in the chrome, not buried in a view", () => {
+    // Dropping the source readout from the top bar must not hide the scanner
+    // fallback, so the notice lives above both views.
+    expect(rule(".chrome")).toContain("border-bottom");
+    expect(rule(".notice")).toContain("var(--op-modified)");
+  });
 });
 
 describe("task checkboxes", () => {

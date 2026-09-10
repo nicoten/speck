@@ -21,6 +21,7 @@ import { ReadingRail } from "./components/ReadingRail";
 import { Sidebar } from "./components/Sidebar";
 import { AgentPanel } from "./components/AgentPanel";
 import { ChangeDashboard } from "./components/ChangeDashboard";
+import { GitHubMark } from "./components/GitHubMark";
 import { ConfirmRun, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
@@ -34,6 +35,10 @@ import {
 import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updates";
 
 const RAIL_WIDTH = "speck:rail-width";
+
+/** github.com itself, or an Enterprise host named after it. */
+const isGitHub = (host: string) =>
+  host === "github.com" || host.startsWith("github.");
 
 export default function App() {
   const [projects, setProjects] = useState<ProjectEntry[]>([]);
@@ -365,6 +370,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="chrome">
       <header className="topbar">
         <ProjectSwitcher
           projects={projects}
@@ -381,7 +387,10 @@ export default function App() {
               onClick={() => void ipc.openForgeUrl(tree.root, repo.webUrl).catch(() => {})}
               title={`Open ${repo.owner}/${repo.name} on ${repo.host}`}
             >
-              {repo.owner}/{repo.name}
+              {isGitHub(repo.host) && <GitHubMark />}
+              <span>
+                {repo.owner}/{repo.name}
+              </span>
             </button>
           )}
           <UpdateNotice
@@ -389,15 +398,17 @@ export default function App() {
             onInstall={() => void installUpdate(setUpdate)}
             onDismiss={() => setUpdate({ status: "idle" })}
           />
-          <span>
-            schema <code>{tree.schema.name}</code>
-            {tree.schema.assumed && " (assumed)"}
-          </span>
-          <span>
-            {tree.source === "cli" ? "read by openspec" : "read by scanner"}
-          </span>
         </div>
       </header>
+
+      {tree.warnings.length > 0 && (
+        <div className="notice" role="status">
+          {tree.warnings.map((w, i) => (
+            <p key={i}>{w}</p>
+          ))}
+        </div>
+      )}
+      </div>
 
       <div className="middle" style={{ gridTemplateColumns: `${railWidth}px 1px minmax(0, 1fr)` }}>
         <Sidebar
@@ -446,7 +457,6 @@ export default function App() {
           />
         ) : (
           <Reader
-            tree={tree}
             ref_={currentRef}
             content={content}
             error={docError ?? handoff.error ?? error}

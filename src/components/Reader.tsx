@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { Doc, DocContent, ProjectTree } from "../lib/types";
+import type { Doc, DocContent } from "../lib/types";
 import type { DocRef } from "../lib/order";
 import { ChangeProgress } from "./ChangeProgress";
 import { DocumentBoundary } from "./DocumentBoundary";
@@ -9,7 +9,6 @@ import { SpecView } from "./SpecView";
 import { TasksView } from "./TasksView";
 
 interface Props {
-  tree: ProjectTree;
   ref_: DocRef | null;
   content: DocContent | null;
   error: string | null;
@@ -65,7 +64,6 @@ function title(ref_: DocRef): string {
 }
 
 export function Reader({
-  tree,
   ref_,
   content,
   error,
@@ -106,14 +104,6 @@ export function Reader({
             }
             applying={applying}
           />
-        </div>
-      )}
-
-      {tree.warnings.length > 0 && (
-        <div className="notice" role="status">
-          {tree.warnings.map((w, i) => (
-            <p key={i}>{w}</p>
-          ))}
         </div>
       )}
 
