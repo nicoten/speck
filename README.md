@@ -44,11 +44,30 @@ The CLI is looked up on `PATH`, then through a login shell, then in the usual
 install locations — a macOS app launched from Finder does not inherit your
 shell's `PATH`, so version-manager shims are invisible without that.
 
-## What Speck does and does not touch
+## What Speck writes
 
-Speck itself never writes to a project. There is no filesystem write capability
-in `tauri.conf.json`, and document reads go through the app's own commands,
-which refuse any path outside an open project.
+Speck writes exactly one thing: **a task's checkbox**. Clicking a box in the
+dashboard or in a `tasks.md` view flips one character on one line of that file.
+
+Everything about that edit is deliberately narrow:
+
+- Only a change's own `tasks.md`, under `openspec/changes/`. Specs, proposals
+  and your project's code are refused by path, before anything is read.
+- The task is addressed by its **text**, and by which occurrence where the same
+  wording repeats — never by line number. An agent may have rewritten the file
+  between it being read and the box being clicked, and a line number would then
+  tick the wrong task with nothing to notice.
+- If the task is no longer there, the write fails and says so. It never falls
+  back to whatever now sits on that line.
+- The rest of the file returns byte for byte: indentation, bullet style,
+  spacing, line endings, and whether there was a trailing newline.
+- The new content is written beside the file and renamed over it, so an
+  interrupted write cannot leave a truncated task list.
+
+Beyond that, Speck reads. Document reads go through the app's own commands,
+which refuse any path outside an open project, and there is no filesystem write
+capability in `tauri.conf.json` at all — the checkbox edit goes through that one
+audited command.
 
 **It can, however, start a Claude session that edits your repository.** That is
 what `Apply` is for, and it is a deliberate change in what this app is. Nothing
@@ -70,7 +89,8 @@ to apply it. It also shows each artifact's state, the files under it, and the
 progress bar, and carries its own Apply button.
 
 Tasks are read from `tasks.md` on the fly, so an agent ticking boxes updates the
-dashboard as it works.
+dashboard as it works — and the boxes are clickable, so you can tick one off
+yourself when you have verified it by hand.
 
 ## Running OpenSpec workflows
 

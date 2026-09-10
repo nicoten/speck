@@ -1047,18 +1047,10 @@ button {
   color: var(--ink-muted);
 }
 
-.dash__box {
-  flex: none;
-  width: 12px;
-  height: 12px;
-  margin-top: 3px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 2px;
-}
-
-.dash__box--done {
-  background: var(--op-added);
-  border-color: var(--op-added);
+.dash__taskerror {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--op-removed);
 }
 
 .dash__artifacts {
@@ -1327,31 +1319,48 @@ button {
   border-bottom: 1px solid var(--rule);
 }
 
-.task__box {
+/* A task's checkbox. Live where a toggle is wired: clicking it edits the file,
+   so it gets a real target and a hover state rather than looking decorative. */
+.taskbox {
   flex: none;
-  width: 13px;
-  height: 13px;
-  margin-top: 3px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 2px;
   position: relative;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  padding: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  background: var(--paper-raised);
 }
 
-.task--done .task__box {
+.taskbox--live {
+  cursor: pointer;
+}
+
+.taskbox--live:hover {
+  border-color: var(--accent);
+}
+
+.taskbox--done {
   background: var(--op-added);
   border-color: var(--op-added);
 }
 
-.task--done .task__box::after {
+.taskbox--done::after {
   content: "";
   position: absolute;
   left: 3px;
   top: 1px;
-  width: 4px;
-  height: 7px;
+  width: 5px;
+  height: 8px;
   border: solid var(--paper-raised);
-  border-width: 0 1.5px 1.5px 0;
+  border-width: 0 1.6px 1.6px 0;
   transform: rotate(40deg);
+}
+
+.taskbox--live.taskbox--done:hover {
+  /* Un-ticking is a real action too, and should look reversible. */
+  opacity: 0.75;
 }
 
 .task--done .task__text {

@@ -195,6 +195,33 @@ pub fn running_sessions(state: State<'_, AppState>) -> Vec<RunningSession> {
     state.sessions.running()
 }
 
+/// Tick a task off, or un-tick it.
+///
+/// The only write this app makes to a project: one character on one line of a
+/// change's `tasks.md`. The task is addressed by its text rather than its line,
+/// so a file an agent has rewritten in the meantime fails loudly instead of
+/// ticking whatever now sits there.
+#[tauri::command]
+pub fn set_task_done(
+    state: State<'_, AppState>,
+    path: String,
+    text: String,
+    occurrence: usize,
+    done: bool,
+) -> CmdResult<()> {
+    let file = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| format!("{path}: {e}"))?;
+
+    let allowed = state.allowed.0.lock().unwrap();
+    if !allowed.iter().any(|root| file.starts_with(root)) {
+        return Err(format!("{} is outside every open project", file.display()));
+    }
+    drop(allowed);
+
+    crate::tasks::set_done(&file, &text, occurrence, done).map_err(to_string_err)
+}
+
 pub fn init_state(app: &AppHandle) -> AppState {
     let config_dir = app
         .path()

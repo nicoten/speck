@@ -16,6 +16,12 @@ interface Props {
   onOpen: (doc: Doc) => void;
   onApply: (changeName: string) => void;
   applying: boolean;
+  onToggleTask: (
+    path: string,
+    text: string,
+    occurrence: number,
+    done: boolean,
+  ) => void;
 }
 
 /**
@@ -28,16 +34,25 @@ function Body({
   ref_,
   content,
   sourceLanguage,
+  onToggleTask,
 }: {
   ref_: DocRef;
   content: DocContent;
   sourceLanguage: string | null;
+  onToggleTask: Props["onToggleTask"];
 }) {
   if (sourceLanguage !== null) {
     return <CodeView markdown={content.markdown} language={sourceLanguage} />;
   }
   if (ref_.doc.kind === "tasks") {
-    return <TasksView markdown={content.markdown} />;
+    return (
+      <TasksView
+        markdown={content.markdown}
+        onToggle={(text, occurrence, done) =>
+          onToggleTask(content.path, text, occurrence, done)
+        }
+      />
+    );
   }
   return <SpecView markdown={content.markdown} />;
 }
@@ -57,6 +72,7 @@ export function Reader({
   onOpen,
   onApply,
   applying,
+  onToggleTask,
 }: Props) {
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -118,7 +134,12 @@ export function Reader({
             {/* Keyed on the path so moving to another document clears a
                 previous failure. */}
             <DocumentBoundary key={content.path}>
-              <Body ref_={ref_} content={content} sourceLanguage={sourceLanguage} />
+              <Body
+                ref_={ref_}
+                content={content}
+                sourceLanguage={sourceLanguage}
+                onToggleTask={onToggleTask}
+              />
             </DocumentBoundary>
           </article>
           {showOutline && <Outline markdown={content.markdown} />}

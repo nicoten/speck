@@ -35,6 +35,20 @@ export type AgentAction =
   | { kind: "apply"; change: string }
   | { kind: "propose"; idea: string };
 
+/**
+ * Tick a task off, or un-tick it — the only write Speck makes to a project.
+ *
+ * The task is named by its text and, where the same wording repeats, by which
+ * occurrence. Not by line number: the file may have been rewritten since it was
+ * read, and a line number would then tick the wrong task silently.
+ */
+export const setTaskDone = (
+  path: string,
+  text: string,
+  occurrence: number,
+  done: boolean,
+) => invoke<void>("set_task_done", { path, text, occurrence, done });
+
 export const startAgentSession = (path: string, action: AgentAction) =>
   invoke<string>("start_agent_session", { path, action });
 

@@ -166,6 +166,18 @@ describe("change dashboard", () => {
   });
 });
 
+describe("task checkboxes", () => {
+  it("makes a live box look like a control and a done one look done", () => {
+    expect(rule(".taskbox--live")).toContain("cursor: pointer");
+    expect(rule(".taskbox--live:hover")).toContain("var(--accent)");
+    expect(rule(".taskbox--done")).toContain("var(--op-added)");
+  });
+
+  it("shows un-ticking as reversible rather than inert", () => {
+    expect(rule(".taskbox--live.taskbox--done:hover")).toContain("opacity");
+  });
+});
+
 describe("agent handoff", () => {
   it("keeps the apply action beside the progress bar", () => {
     expect(rule(".changebar")).toContain("display: flex");

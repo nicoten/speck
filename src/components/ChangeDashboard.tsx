@@ -1,24 +1,33 @@
 import { useEffect, useState } from "react";
 import * as ipc from "../lib/ipc";
 import { artifactTrail, isComplete, progressLabel } from "../lib/artifact";
-import { parseTasks, type TaskItem } from "../lib/markdown/parse";
+import { parseTasks } from "../lib/markdown/parse";
 import type { ArtifactGroup, ChangeNode, Doc, Section } from "../lib/types";
 import { ChangeProgress } from "./ChangeProgress";
+import { TaskCheckbox } from "./TaskCheckbox";
 
-/** Tasks are the one thing here that needs a file read, not just the tree. */
-function useTasks(change: ChangeNode) {
-  const tasksDoc = change.artifacts
-    .find((a) => a.id === "tasks")
-    ?.docs[0];
-  const [state, setState] = useState<{
-    remaining: TaskItem[];
-    done: TaskItem[];
-    loaded: boolean;
-  }>({ remaining: [], done: [], loaded: false });
+/** A task, with enough to address it in the file when its box is clicked. */
+interface DashTask {
+  text: string;
+  done: boolean;
+  /** Which occurrence of this exact wording, counting from zero. */
+  occurrence: number;
+}
+
+/**
+ * Tasks are the one thing here that needs a file read, not just the tree.
+ *
+ * Re-read whenever the project reloads: `refreshKey` changes on every load, and
+ * the document's identity does not change when its contents do — depending on
+ * the doc alone left this stale while an agent ticked boxes underneath it.
+ */
+function useTasks(change: ChangeNode, refreshKey: number) {
+  const tasksDoc = change.artifacts.find((a) => a.id === "tasks")?.docs[0];
+  const [tasks, setTasks] = useState<DashTask[] | null>(null);
 
   useEffect(() => {
     if (!tasksDoc) {
-      setState({ remaining: [], done: [], loaded: true });
+      setTasks([]);
       return;
     }
     let live = true;
@@ -26,23 +35,32 @@ function useTasks(change: ChangeNode) {
       .readDoc(tasksDoc.path)
       .then((content) => {
         if (!live) return;
-        const parsed = parseTasks(content.markdown);
-        const all = parsed.groups.flatMap((g) => g.items);
-        setState({
-          remaining: all.filter((t) => !t.done),
-          done: all.filter((t) => t.done),
-          loaded: true,
-        });
+        const seen = new Map<string, number>();
+        setTasks(
+          parseTasks(content.markdown)
+            .groups.flatMap((g) => g.items)
+            .map((item) => {
+              const occurrence = seen.get(item.text) ?? 0;
+              seen.set(item.text, occurrence + 1);
+              return { text: item.text, done: item.done, occurrence };
+            }),
+        );
       })
-      .catch(() => live && setState({ remaining: [], done: [], loaded: true }));
+      .catch(() => live && setTasks([]));
     return () => {
       live = false;
     };
-    // Re-read when the file changes underneath: the watcher reloads the tree,
-    // which gives this doc a new seq.
-  }, [tasksDoc?.path, tasksDoc?.seq]);
+  }, [tasksDoc?.path, refreshKey]);
 
-  return state;
+  /** Flip locally so the box responds at once; the reload confirms it. */
+  const mark = (task: DashTask, done: boolean) =>
+    setTasks((prev) =>
+      prev?.map((t) =>
+        t.text === task.text && t.occurrence === task.occurrence ? { ...t, done } : t,
+      ) ?? prev,
+    );
+
+  return { tasks, path: tasksDoc?.path, mark };
 }
 
 function Artifacts({
@@ -105,18 +123,37 @@ export function ChangeDashboard({
   onOpenDoc,
   onApply,
   applying,
+  refreshKey,
 }: {
   change: ChangeNode;
   section: Section["kind"];
   onOpenDoc: (doc: Doc) => void;
   onApply?: () => void;
   applying: boolean;
+  refreshKey: number;
 }) {
-  const { remaining, done, loaded } = useTasks(change);
+  const { tasks, path, mark } = useTasks(change, refreshKey);
   const [showDone, setShowDone] = useState(false);
+  const [taskError, setTaskError] = useState<string | null>(null);
+
+  const loaded = tasks !== null;
+  const remaining = tasks?.filter((t) => !t.done) ?? [];
+  const done = tasks?.filter((t) => t.done) ?? [];
   const progress = progressLabel(change);
-  const total = (change.totalTasks ?? 0) || remaining.length + done.length;
-  const pct = total > 0 ? Math.round(((change.completedTasks ?? done.length) / total) * 100) : 0;
+  const total = (tasks?.length ?? 0) || (change.totalTasks ?? 0);
+  const pct = total > 0 ? Math.round((done.length / total) * 100) : 0;
+
+  const toggle = (task: DashTask) => {
+    if (!path) return;
+    const next = !task.done;
+    mark(task, next);
+    setTaskError(null);
+    void ipc.setTaskDone(path, task.text, task.occurrence, next).catch((e) => {
+      // Put it back: the file did not change, so the box should not claim it did.
+      mark(task, task.done);
+      setTaskError(String(e));
+    });
+  };
 
   return (
     <div className="reader">
@@ -162,10 +199,19 @@ export function ChangeDashboard({
                 : "Every task is ticked off."}
             </p>
           )}
+          {taskError && (
+            <p className="dash__taskerror" role="alert">
+              {taskError}
+            </p>
+          )}
           <ul className="dash__tasks">
-            {remaining.map((task, i) => (
-              <li className="dash__task" key={i}>
-                <span className="dash__box" aria-hidden="true" />
+            {remaining.map((task) => (
+              <li className="dash__task" key={`${task.text}#${task.occurrence}`}>
+                <TaskCheckbox
+                  done={false}
+                  onToggle={() => toggle(task)}
+                  label={`Mark done: ${task.text}`}
+                />
                 <span>{task.text}</span>
               </li>
             ))}
@@ -182,9 +228,16 @@ export function ChangeDashboard({
             </h2>
             {showDone && (
               <ul className="dash__tasks">
-                {done.map((task, i) => (
-                  <li className="dash__task dash__task--done" key={i}>
-                    <span className="dash__box dash__box--done" aria-hidden="true" />
+                {done.map((task) => (
+                  <li
+                    className="dash__task dash__task--done"
+                    key={`${task.text}#${task.occurrence}`}
+                  >
+                    <TaskCheckbox
+                      done
+                      onToggle={() => toggle(task)}
+                      label={`Mark not done: ${task.text}`}
+                    />
                     <span>{task.text}</span>
                   </li>
                 ))}

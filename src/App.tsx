@@ -39,6 +39,9 @@ export default function App() {
   const [projects, setProjects] = useState<ProjectEntry[]>([]);
   const [tree, setTree] = useState<ProjectTree | null>(null);
   const [openPath, setOpenPath] = useState<string | null>(null);
+  /** Bumped on every project load, so views reading files re-read them. A
+   *  document's identity does not change when its contents do. */
+  const [treeVersion, setTreeVersion] = useState(0);
   /** A change's dashboard, which is a view of the change rather than a file. */
   const [openChange, setOpenChange] = useState<{
     section: Section["kind"];
@@ -100,6 +103,21 @@ export default function App() {
     }
   }, []);
 
+  // Ticking a box edits tasks.md; the watcher then reloads and the reader
+  // re-reads the file, so the checklist ends up showing what is on disk rather
+  // than what was clicked.
+  const toggleTask = useCallback(
+    async (path: string, text: string, occurrence: number, done: boolean) => {
+      try {
+        await ipc.setTaskDone(path, text, occurrence, done);
+        setDocError(null);
+      } catch (e) {
+        setDocError(String(e));
+      }
+    },
+    [],
+  );
+
   const showChange = useCallback(
     (section: Section["kind"], name: string) => {
       setOpenPath(null);
@@ -115,6 +133,7 @@ export default function App() {
       try {
         const next = await ipc.loadProject(path);
         setTree(next);
+        setTreeVersion((v) => v + 1);
         setError(null);
         if (!keepDoc) setCollapsed(collapsedArchive(next));
 
@@ -407,6 +426,7 @@ export default function App() {
                 : undefined
             }
             applying={activeSession !== undefined}
+            refreshKey={treeVersion}
           />
         ) : (
           <Reader
@@ -420,6 +440,9 @@ export default function App() {
               setRunRequest({ change });
             }}
             applying={activeSession !== undefined}
+            onToggleTask={(path, text, occurrence, done) =>
+              void toggleTask(path, text, occurrence, done)
+            }
           />
         )}
       </div>

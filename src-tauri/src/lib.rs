@@ -2,6 +2,7 @@ mod agent;
 mod commands;
 mod library;
 pub mod openspec;
+mod tasks;
 mod watch;
 
 use tauri::Manager;
@@ -28,6 +29,7 @@ pub fn run() {
             commands::start_agent_session,
             commands::stop_agent_session,
             commands::running_sessions,
+            commands::set_task_done,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
