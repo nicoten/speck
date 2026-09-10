@@ -57,8 +57,10 @@ editor refreshes in place, keeping your scroll position.
 ## Installing
 
 Download the `.dmg` from [the latest release](https://github.com/nicoten/speck/releases/latest)
-and drag Speck to Applications. The app is not notarised by Apple, so the first
-launch needs right-click → Open rather than a double-click.
+and drag Speck to Applications. Builds are signed with a Developer ID and
+notarised by Apple, so it opens with a double-click — no Gatekeeper detour.
+
+Apple Silicon only for now; an Intel build would need a second release artifact.
 
 Speck checks for a newer release on launch and offers it as a line in the top
 bar; nothing is downloaded until you accept. Updates are verified against a
@@ -77,35 +79,41 @@ cd src-tauri && cargo test
 
 ## Releasing
 
-Releases are built on a maintainer's machine and signed with the updater key.
+Bump `version` in **both** `src-tauri/tauri.conf.json` and `package.json`, then:
 
 ```sh
-# The private key is not in this repo, and must not be.
-export TAURI_SIGNING_PRIVATE_KEY_PATH=~/.speck/updater.key
-export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=
-
-pnpm tauri build
+./scripts/release.sh
+gh release create v0.1.0 dist-release/* --title "Speck 0.1.0" --notes "..."
 ```
 
-That produces, under `src-tauri/target/release/bundle/`:
+The script produces `dist-release/`:
 
 | Artifact | Purpose |
 | --- | --- |
-| `dmg/Speck_<version>_aarch64.dmg` | what people download |
-| `macos/Speck.app.tar.gz` | what the updater installs |
-| `macos/Speck.app.tar.gz.sig` | signature the app verifies |
+| `Speck_<version>_arm64.dmg` | what people download |
+| `Speck.app.tar.gz` | what the updater installs |
+| `Speck.app.tar.gz.sig` | signature the app verifies |
+| `latest.json` | the manifest the app polls |
 
-A release then needs those two updater files plus a `latest.json` naming the
-version, the signature, and the download URL — the app reads that manifest from
-`releases/latest/download/latest.json`.
+All four must be attached to the release: the app reads the manifest from
+`releases/latest/download/latest.json`, and the URL inside it points at that
+version's tarball.
 
-Bump `version` in `src-tauri/tauri.conf.json` and `package.json` together: the
-updater compares the running app's version against the manifest, so a release
-whose config was not bumped will not be offered.
+The version check compares the running app against the manifest, which is why
+the two config files have to agree — the script refuses to build if they don't.
 
-**If the private key is lost, updates stop working for everyone already running
-the app** — a new key means new releases fail verification against the old
-public key, and each user has to reinstall by hand. It lives in `~/.speck/`.
+### Signing keys
+
+`~/.speck/updater.key` and `~/.speck/updater.pass`, mode 600, outside this repo.
+
+The script deliberately **clears any inherited `TAURI_SIGNING_*` variables** and
+reads only those files. A key exported in a shell profile would otherwise sign
+Speck with the wrong key, and the app would then reject its own updates with a
+signature error that looks nothing like its cause.
+
+**Losing the private key breaks updates for everyone already running Speck.**
+Releases signed by a new key fail verification against the public key compiled
+into installed copies, and every user has to reinstall by hand. Back it up.
 
 ## Design
 

@@ -38,7 +38,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVFNkMxQTlDQkUwNkM1RUMKUldUc3hRYStuQnBzWG44MnA1Wlg3c0FjVFJnRVlkZDl0akZXSUNiZ1JHWkl2dUZ2SE5scHQ5V1IK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUwMzg2RDZFNDgzRjlGMTQKUldRVW56OUlibTA0VVB6a095R1VjS2t6NkhQS2VrSnVTT2ozRXJDOVBvNys2YXl5cGxKRG5zTWsK",
       "endpoints": [
         "https://github.com/nicoten/speck/releases/latest/download/latest.json"
       ]

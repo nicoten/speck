@@ -27,3 +27,6 @@ dist-ssr
 # committed: anyone holding it can sign an update this app will trust.
 *.key
 *.key.pub
+
+# Built release artifacts
+dist-release/
