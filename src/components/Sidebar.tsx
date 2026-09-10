@@ -16,11 +16,17 @@ interface Props {
   onOpen: (doc: Doc) => void;
   collapsed: Set<string>;
   onToggle: (key: string) => void;
+  /** Name of the change whose dashboard is open, if any. */
+  openChange: string | null;
+  onOpenChange: (name: string) => void;
 }
 
 interface SidebarProps extends Props {
   onNewChange: () => void;
 }
+
+/** What a row inside the tree needs: nothing about changes or sections. */
+type RowProps = Pick<Props, "openPath" | "onOpen" | "collapsed" | "onToggle">;
 
 function Progress({ of }: { of: ChangeNode }) {
   const label = progressLabel(of);
@@ -46,20 +52,39 @@ function Change({
   onOpen,
   collapsed,
   onToggle,
+  openChange,
+  onOpenChange,
 }: {
   change: ChangeNode;
   keyPrefix: string;
-} & Omit<Props, "tree">) {
+  openChange: string | null;
+  onOpenChange: (name: string) => void;
+} & RowProps) {
   const key = `${keyPrefix}:${change.name}`;
   const isOpen = !collapsed.has(key);
+  const selected = openChange === change.name;
 
   return (
     <div>
-      <button className="row" onClick={() => onToggle(key)} aria-expanded={isOpen}>
-        <span className="disclosure" aria-hidden="true">
+      {/* Two controls, because they do different things: the caret shows the
+          change's documents, the name opens the change itself. */}
+      <div className={`row row--split${selected ? " row--selected" : ""}`}>
+        <button
+          className="disclosure disclosure--button"
+          onClick={() => onToggle(key)}
+          aria-expanded={isOpen}
+          aria-label={`${isOpen ? "Collapse" : "Expand"} ${change.name}`}
+        >
           {isOpen ? "▾" : "▸"}
-        </span>
-        <span className="row__label">{change.name}</span>
+        </button>
+        <button
+          className="row__name"
+          onClick={() => onOpenChange(change.name)}
+          aria-current={selected}
+          title={`Open ${change.name}`}
+        >
+          <span className="row__label">{change.name}</span>
+        </button>
         <span className="row__trail">
           {/* Archived changes show their date; an active one shows progress
               only while closed, since its Tasks row carries it once open. */}
@@ -69,7 +94,7 @@ function Change({
             !isOpen && <Progress of={change} />
           )}
         </span>
-      </button>
+      </div>
 
       {isOpen && (
         <div className="change__docs">
@@ -105,7 +130,7 @@ function ArtifactRow({
 }: {
   group: ArtifactGroup;
   changeKey: string;
-} & Omit<Props, "tree">) {
+} & RowProps) {
   const key = `${changeKey}:${group.id}`;
   const isOpen = !collapsed.has(key);
   const holdsOpenDoc = group.docs.some((d) => d.path === openPath);
@@ -226,6 +251,8 @@ export function Sidebar({
   collapsed,
   onToggle,
   onNewChange,
+  openChange,
+  onOpenChange,
 }: SidebarProps) {
   return (
     <nav className="sidebar" aria-label="Project documents">
@@ -273,6 +300,8 @@ export function Sidebar({
                 onOpen={onOpen}
                 collapsed={collapsed}
                 onToggle={onToggle}
+                openChange={openChange}
+                onOpenChange={onOpenChange}
               />
             ))}
 

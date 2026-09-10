@@ -414,6 +414,43 @@ button {
   font-weight: 600;
 }
 
+/* A change row is two controls: the caret shows its documents, the name opens
+   the change. They are separate because they do separate things. */
+.row--split {
+  padding: 0 14px 0 0;
+}
+
+.row--selected {
+  background: var(--paper-raised);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+.disclosure--button {
+  padding: 3px 0;
+  flex: none;
+  cursor: pointer;
+}
+
+.disclosure--button:hover {
+  color: var(--ink);
+}
+
+.row__name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 3px 0;
+  color: inherit;
+  font: inherit;
+}
+
+.row__name:hover .row__label {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
 .row--missing {
   color: var(--ink-faint);
   cursor: default;
@@ -901,6 +938,215 @@ button {
 
 .outline__item--l3 {
   padding-left: 12px;
+}
+
+/* -------------------------------------------------------------- dashboard */
+
+.dash {
+  max-width: 78ch;
+  padding: 26px 40px 48px;
+}
+
+.dash__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.dash__head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash__name {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+
+.dash__meta {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.dash__meter {
+  height: 4px;
+  margin: 16px 0 4px;
+  background: var(--paper-sunk);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dash__meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--op-added);
+}
+
+.dash__section {
+  margin-top: 26px;
+}
+
+.dash__h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.dash__count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.dash__toggle {
+  font: inherit;
+  color: inherit;
+}
+
+.dash__empty {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--ink-muted);
+}
+
+.dash__tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+
+.dash__task {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--rule);
+  line-height: 1.5;
+}
+
+.dash__task--done {
+  color: var(--ink-muted);
+}
+
+.dash__box {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+}
+
+.dash__box--done {
+  background: var(--op-added);
+  border-color: var(--op-added);
+}
+
+.dash__artifacts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dash__artifact {
+  display: grid;
+  grid-template-columns: 16px 6.5rem 5.5rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 12.5px;
+}
+
+.dash__step {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.dash__artifact-name {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.dash__artifact-state {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.dash__artifact[data-state="current"] .dash__artifact-state {
+  color: var(--accent-strong);
+}
+
+.dash__artifact-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.dash__file {
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.dash__file:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dash__nofile {
+  color: var(--ink-faint);
+}
+
+.dash__artifact-trail {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.dash__done {
+  color: var(--op-added);
+}
+
+.dash__note {
+  margin-top: 26px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 720px) {
+  .dash {
+    padding: 20px 20px 40px;
+  }
+
+  .dash__artifact {
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+  }
+
+  .dash__artifact-state,
+  .dash__artifact-files {
+    grid-column: 2 / -1;
+  }
 }
 
 /* ---------------------------------------------------- requirement blocks */

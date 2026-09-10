@@ -137,6 +137,26 @@ describe("update notice", () => {
   });
 });
 
+describe("change dashboard", () => {
+  it("separates the caret from the name in a change row", () => {
+    expect(rule(".disclosure--button")).toContain("cursor: pointer");
+    expect(rule(".row__name")).toContain("flex: 1");
+    expect(rule(".row--selected")).toContain("var(--accent)");
+  });
+
+  it("holds the dashboard to a measure and marks the step in hand", () => {
+    expect(rule(".dash")).toContain("max-width");
+    expect(rule('.dash__artifact[data-state="current"] .dash__artifact-state')).toContain(
+      "var(--accent-strong)",
+    );
+  });
+
+  it("collapses the artifact table on a narrow window", () => {
+    const narrow = css.slice(css.indexOf("@media (max-width: 720px)"));
+    expect(narrow).toContain(".dash__artifact");
+  });
+});
+
 describe("agent handoff", () => {
   it("keeps the apply action beside the progress bar", () => {
     expect(rule(".changebar")).toContain("display: flex");

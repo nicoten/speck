@@ -92,3 +92,18 @@ export function neighbours(
 export function firstDoc(tree: ProjectTree): DocRef | null {
   return readingSequence(tree)[0] ?? null;
 }
+
+/** A change by section and name, or undefined once it is gone from the tree. */
+export function findChange(
+  tree: ProjectTree,
+  section: Section["kind"],
+  name: string,
+): ChangeNode | undefined {
+  for (const s of tree.sections) {
+    if (s.kind !== section) continue;
+    if (s.kind === "activeChanges" || s.kind === "archive") {
+      return s.items.find((c) => c.name === name);
+    }
+  }
+  return undefined;
+}

@@ -58,6 +58,20 @@ chosen there rather than assumed.
 Projects are watched while open, so a document rewritten by an agent or an
 editor refreshes in place, keeping your scroll position.
 
+## A change's dashboard
+
+Clicking a change's **name** opens its dashboard; the **caret** to its left
+shows or hides its documents. Two controls because they do two things — reading
+about a change and navigating into its files are different intentions.
+
+The dashboard is where the tasks live. The sidebar can say `5/14`; only this can
+say *which nine* are still open, which is what you want before deciding whether
+to apply it. It also shows each artifact's state, the files under it, and the
+progress bar, and carries its own Apply button.
+
+Tasks are read from `tasks.md` on the fly, so an agent ticking boxes updates the
+dashboard as it works.
+
 ## Running OpenSpec workflows
 
 `Apply` on a change, and `+` beside **Active changes**, run OpenSpec's agent

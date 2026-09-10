@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   findByPath,
+  findChange,
   firstDoc,
   flatten,
   neighbours,
@@ -206,5 +207,25 @@ describe("firstDoc and findByPath", () => {
   it("finds a document by path", () => {
     expect(findByPath(tree(), "/p/tasks.md")?.doc.kind).toBe("tasks");
     expect(findByPath(tree(), "/p/nope")).toBeUndefined();
+  });
+});
+
+describe("findChange", () => {
+  it("finds a change within its own section", () => {
+    const t = tree();
+    expect(findChange(t, "activeChanges", "add-user-auth")?.artifacts.length).toBe(4);
+    expect(findChange(t, "archive", "old-thing")?.archivedOn).toBe("2026-01-01");
+  });
+
+  it("does not find a change in the wrong section", () => {
+    const t = tree();
+    // An archived change and an active one can share a name; the section is
+    // part of the identity.
+    expect(findChange(t, "archive", "add-user-auth")).toBeUndefined();
+    expect(findChange(t, "activeChanges", "old-thing")).toBeUndefined();
+  });
+
+  it("returns undefined once a change is gone from the tree", () => {
+    expect(findChange(tree(), "activeChanges", "deleted-change")).toBeUndefined();
   });
 });

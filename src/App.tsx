@@ -1,13 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import * as ipc from "./lib/ipc";
-import { findByPath, firstDoc, neighbours, type DocRef } from "./lib/order";
-import type { Doc, DocContent, ProjectEntry, ProjectTree } from "./lib/types";
+import {
+  findByPath,
+  findChange,
+  firstDoc,
+  neighbours,
+  type DocRef,
+} from "./lib/order";
+import type {
+  Doc,
+  DocContent,
+  ProjectEntry,
+  ProjectTree,
+  Section,
+} from "./lib/types";
 import { ProjectSwitcher } from "./components/ProjectSwitcher";
 import { Reader } from "./components/Reader";
 import { ReadingRail } from "./components/ReadingRail";
 import { Sidebar } from "./components/Sidebar";
 import { AgentPanel } from "./components/AgentPanel";
+import { ChangeDashboard } from "./components/ChangeDashboard";
 import { ConfirmRun, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
@@ -26,6 +39,11 @@ export default function App() {
   const [projects, setProjects] = useState<ProjectEntry[]>([]);
   const [tree, setTree] = useState<ProjectTree | null>(null);
   const [openPath, setOpenPath] = useState<string | null>(null);
+  /** A change's dashboard, which is a view of the change rather than a file. */
+  const [openChange, setOpenChange] = useState<{
+    section: Section["kind"];
+    name: string;
+  } | null>(null);
   const [content, setContent] = useState<DocContent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
@@ -71,6 +89,7 @@ export default function App() {
   }, []);
 
   const openDoc = useCallback(async (doc: Doc) => {
+    setOpenChange(null);
     setOpenPath(doc.path);
     try {
       setContent(await ipc.readDoc(doc.path));
@@ -80,6 +99,16 @@ export default function App() {
       setDocError(String(e));
     }
   }, []);
+
+  const showChange = useCallback(
+    (section: Section["kind"], name: string) => {
+      setOpenPath(null);
+      setContent(null);
+      setDocError(null);
+      setOpenChange({ section, name });
+    },
+    [],
+  );
 
   const openProject = useCallback(
     async (path: string, keepDoc = false): Promise<boolean> => {
@@ -298,6 +327,12 @@ export default function App() {
   }, [dragging, railWidth]);
 
   const currentRef = tree && openPath ? findByPath(tree, openPath) ?? null : null;
+  // Resolved against the current tree, so a change that is archived or removed
+  // underneath the dashboard falls away rather than showing stale numbers.
+  const dashboard =
+    tree && openChange
+      ? findChange(tree, openChange.section, openChange.name)
+      : undefined;
 
   if (!tree) {
     return <Welcome onAdd={addProject} error={error} cliVersion={cliVersion} />;
@@ -341,6 +376,15 @@ export default function App() {
             setHandoff({ busy: false, error: null });
             setRunRequest({});
           }}
+          openChange={dashboard ? openChange!.name : null}
+          onOpenChange={(name) => {
+            const section = tree.sections.find(
+              (s) =>
+                (s.kind === "activeChanges" || s.kind === "archive") &&
+                s.items.some((c) => c.name === name),
+            );
+            if (section) showChange(section.kind, name);
+          }}
         />
         <div
           className="divider"
@@ -349,18 +393,35 @@ export default function App() {
           aria-orientation="vertical"
           onMouseDown={() => setDragging(true)}
         />
-        <Reader
-          tree={tree}
-          ref_={currentRef}
-          content={content}
-          error={docError ?? handoff.error ?? error}
-          onOpen={(doc) => void openDoc(doc)}
-          onApply={(change) => {
-            setHandoff({ busy: false, error: null });
-            setRunRequest({ change });
-          }}
-          applying={activeSession !== undefined}
-        />
+        {dashboard ? (
+          <ChangeDashboard
+            change={dashboard}
+            section={openChange!.section}
+            onOpenDoc={(doc) => void openDoc(doc)}
+            onApply={
+              openChange!.section === "activeChanges"
+                ? () => {
+                    setHandoff({ busy: false, error: null });
+                    setRunRequest({ change: dashboard.name });
+                  }
+                : undefined
+            }
+            applying={activeSession !== undefined}
+          />
+        ) : (
+          <Reader
+            tree={tree}
+            ref_={currentRef}
+            content={content}
+            error={docError ?? handoff.error ?? error}
+            onOpen={(doc) => void openDoc(doc)}
+            onApply={(change) => {
+              setHandoff({ busy: false, error: null });
+              setRunRequest({ change });
+            }}
+            applying={activeSession !== undefined}
+          />
+        )}
       </div>
 
       {panelSession && (
