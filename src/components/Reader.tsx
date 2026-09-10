@@ -15,12 +15,13 @@ interface Props {
   onOpen: (doc: Doc) => void;
   onApply: (changeName: string) => void;
   applying: boolean;
+  /** Resolves true when the write landed, false when it was refused. */
   onToggleTask: (
     path: string,
     text: string,
     occurrence: number,
     done: boolean,
-  ) => void;
+  ) => Promise<boolean>;
 }
 
 /**

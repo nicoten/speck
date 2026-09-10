@@ -103,13 +103,25 @@ export default function App() {
   // Ticking a box edits tasks.md; the watcher then reloads and the reader
   // re-reads the file, so the checklist ends up showing what is on disk rather
   // than what was clicked.
+  //
+  // That round trip is over a second on a real project, so the views tick the
+  // box themselves and wait for the file to confirm it. Whether the write
+  // landed is the answer they need to keep or undo that, so it is reported
+  // rather than swallowed.
   const toggleTask = useCallback(
-    async (path: string, text: string, occurrence: number, done: boolean) => {
+    async (
+      path: string,
+      text: string,
+      occurrence: number,
+      done: boolean,
+    ): Promise<boolean> => {
       try {
         await ipc.setTaskDone(path, text, occurrence, done);
         setDocError(null);
+        return true;
       } catch (e) {
         setDocError(String(e));
+        return false;
       }
     },
     [],
@@ -472,9 +484,7 @@ export default function App() {
             onOpen={(doc) => void openDoc(doc)}
             onApply={(change) => askToRun("apply", change)}
             applying={handoff.busy}
-            onToggleTask={(path, text, occurrence, done) =>
-              void toggleTask(path, text, occurrence, done)
-            }
+            onToggleTask={toggleTask}
           />
         )}
 

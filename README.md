@@ -40,6 +40,14 @@ walks `openspec/` instead and the window says so rather than failing. A test
 asserts both paths produce the same structure and ordering for the same
 project, which is what keeps the fallback honest.
 
+A project's workflow schema is resolved once and then kept until its
+`config.yaml` changes. Locating the schema definition that ships with the CLI
+costs a process spawn — over half a second on a real project — and it sat in
+front of every reload, which means every time an agent touched a file while you
+read: about 2.0 seconds a reload, against 0.7 with the answer kept. Upgrading
+the `openspec` package under a running app keeps the old answer until it
+restarts, which is the trade.
+
 The CLI is looked up on `PATH`, then through a login shell, then in the usual
 install locations — a macOS app launched from Finder does not inherit your
 shell's `PATH`, so version-manager shims are invisible without that.
@@ -63,6 +71,14 @@ Everything about that edit is deliberately narrow:
   spacing, line endings, and whether there was a trailing newline.
 - The new content is written beside the file and renamed over it, so an
   interrupted write cannot leave a truncated task list.
+
+A box also responds the moment you click it, rather than after the file comes
+back. It has to: the write, the watcher's coalescing window and the project
+reload behind them add up to about a second, and a control that sits still that
+long reads as broken. So the click is held in the view and drawn as though it
+had already landed — and the file still decides, because new content clears
+whatever was held, and a refused write drops its own and snaps the box back with
+the error. What ends up on screen is what is on disk, just not only that.
 
 Beyond that, Speck reads. Document reads go through the app's own commands,
 which refuse any path outside an open project, and there is no filesystem write

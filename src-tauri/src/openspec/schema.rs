@@ -129,9 +129,76 @@ fn packaged_schema_path(template_path: &str) -> Option<PathBuf> {
     candidate.exists().then_some(candidate)
 }
 
+/// What a resolved schema was resolved against: `openspec/config.yaml`'s
+/// modification time and size, or `None` where the file is absent — which is
+/// itself a state to invalidate on, since writing one changes the answer.
+type Stamp = Option<(std::time::SystemTime, u64)>;
+
+fn config_stamp(root: &Path) -> Stamp {
+    let m = std::fs::metadata(root.join("openspec").join("config.yaml")).ok()?;
+    Some((m.modified().ok()?, m.len()))
+}
+
+struct Cached {
+    stamp: Stamp,
+    info: SchemaInfo,
+    warnings: Vec<String>,
+}
+
+/// Resolving a schema costs a CLI process spawn — over half a second measured
+/// on a real project — and every project reload does it, which means every time
+/// an agent or an editor touches a file while you read. The answer changes only
+/// when the project says it uses a different schema, so it is kept until
+/// `config.yaml` does.
+///
+/// Held for the life of the process: upgrading the `openspec` package under a
+/// running app keeps the old answer until it restarts, which is a fair trade
+/// for not paying the spawn on every keystroke an agent makes.
+static CACHE: std::sync::LazyLock<
+    std::sync::Mutex<std::collections::HashMap<PathBuf, Cached>>,
+> = std::sync::LazyLock::new(Default::default);
+
+/// `load` the schema unless the cached answer was resolved against the same
+/// `config.yaml`, replaying its warnings either way so a cached answer still
+/// says how it degraded.
+fn cached<F>(root: &Path, warnings: &mut Vec<String>, load: F) -> SchemaInfo
+where
+    F: FnOnce(&Path, &mut Vec<String>) -> SchemaInfo,
+{
+    let stamp = config_stamp(root);
+
+    if let Some(hit) = CACHE.lock().unwrap().get(root) {
+        if hit.stamp == stamp {
+            warnings.extend(hit.warnings.iter().cloned());
+            return hit.info.clone();
+        }
+    }
+
+    // Collected separately so a replay from the cache carries exactly the
+    // warnings this resolution produced, not whatever else the caller had.
+    let mut fresh = Vec::new();
+    let info = load(root, &mut fresh);
+
+    CACHE.lock().unwrap().insert(
+        root.to_path_buf(),
+        Cached {
+            stamp,
+            info: info.clone(),
+            warnings: fresh.clone(),
+        },
+    );
+    warnings.extend(fresh);
+    info
+}
+
 /// Resolve the full schema for a project, with `warnings` collecting anything
-/// that degraded along the way.
+/// that degraded along the way. Answered from the cache while the project's
+/// `config.yaml` is unchanged.
 pub fn resolve(root: &Path, warnings: &mut Vec<String>) -> SchemaInfo {
+    cached(root, warnings, resolve_uncached)
+}
+
+fn resolve_uncached(root: &Path, warnings: &mut Vec<String>) -> SchemaInfo {
     let name = schema_name(root);
 
     // 1. Project-local definition wins: a project that ships its own schema
@@ -201,6 +268,144 @@ pub fn resolve(root: &Path, warnings: &mut Vec<String>) -> SchemaInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    /// A project whose `config.yaml` says `text`.
+    fn project(text: &str) -> tempfile::TempDir {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("openspec")).unwrap();
+        std::fs::write(dir.path().join("openspec").join("config.yaml"), text).unwrap();
+        dir
+    }
+
+    #[test]
+    fn resolves_once_and_then_answers_from_the_cache() {
+        // Every project reload asked the CLI where the packaged schema lives,
+        // which cost more than half a second to re-answer a question whose
+        // answer had not changed.
+        let dir = project("schema: spec-driven\n");
+        let calls = AtomicUsize::new(0);
+        let load = |_: &Path, _: &mut Vec<String>| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            SchemaInfo {
+                name: "spec-driven".into(),
+                description: None,
+                artifacts: default_artifacts(),
+                assumed: false,
+            }
+        };
+
+        let mut warnings = Vec::new();
+        let first = cached(dir.path(), &mut warnings, load);
+        let second = cached(dir.path(), &mut warnings, load);
+
+        assert_eq!(calls.load(Ordering::SeqCst), 1, "the second call resolved again");
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn resolves_again_once_config_yaml_changes() {
+        let dir = project("schema: spec-driven\n");
+        let calls = AtomicUsize::new(0);
+        let load = |_: &Path, _: &mut Vec<String>| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            SchemaInfo {
+                name: "spec-driven".into(),
+                description: None,
+                artifacts: default_artifacts(),
+                assumed: false,
+            }
+        };
+
+        let mut warnings = Vec::new();
+        cached(dir.path(), &mut warnings, load);
+        std::fs::write(
+            dir.path().join("openspec").join("config.yaml"),
+            "schema: something-else\n",
+        )
+        .unwrap();
+        cached(dir.path(), &mut warnings, load);
+
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            2,
+            "a rewritten config.yaml must not be answered from the cache"
+        );
+    }
+
+    #[test]
+    fn a_cached_answer_still_reports_how_it_degraded() {
+        // The warnings are how the window says it fell back to a built-in
+        // order. Caching the schema must not silently drop them.
+        let dir = project("schema: spec-driven\n");
+        let load = |_: &Path, w: &mut Vec<String>| {
+            w.push("could not read the definition".to_string());
+            SchemaInfo {
+                name: "spec-driven".into(),
+                description: None,
+                artifacts: default_artifacts(),
+                assumed: true,
+            }
+        };
+
+        let mut first = Vec::new();
+        cached(dir.path(), &mut first, load);
+        let mut second = Vec::new();
+        cached(dir.path(), &mut second, load);
+
+        assert_eq!(first, vec!["could not read the definition".to_string()]);
+        assert_eq!(second, first, "the cached answer lost its warning");
+    }
+
+    #[test]
+    fn projects_do_not_share_a_cached_schema() {
+        let a = project("schema: alpha\n");
+        let b = project("schema: beta\n");
+        let load = |root: &Path, _: &mut Vec<String>| SchemaInfo {
+            name: schema_name(root),
+            description: None,
+            artifacts: default_artifacts(),
+            assumed: false,
+        };
+
+        let mut warnings = Vec::new();
+        assert_eq!(cached(a.path(), &mut warnings, load).name, "alpha");
+        assert_eq!(cached(b.path(), &mut warnings, load).name, "beta");
+        assert_eq!(cached(a.path(), &mut warnings, load).name, "alpha");
+    }
+
+    #[test]
+    fn a_project_without_config_yaml_is_resolved_once_and_again_when_one_appears() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("openspec")).unwrap();
+        let calls = AtomicUsize::new(0);
+        let load = |_: &Path, _: &mut Vec<String>| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            SchemaInfo {
+                name: DEFAULT_SCHEMA.into(),
+                description: None,
+                artifacts: default_artifacts(),
+                assumed: true,
+            }
+        };
+
+        let mut warnings = Vec::new();
+        cached(dir.path(), &mut warnings, load);
+        cached(dir.path(), &mut warnings, load);
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+
+        std::fs::write(
+            dir.path().join("openspec").join("config.yaml"),
+            "schema: spec-driven\n",
+        )
+        .unwrap();
+        cached(dir.path(), &mut warnings, load);
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            2,
+            "a config.yaml appearing must invalidate the cached answer"
+        );
+    }
 
     #[test]
     fn parses_artifact_order_and_requires_from_yaml() {
