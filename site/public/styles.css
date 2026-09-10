@@ -354,8 +354,17 @@ a:hover {
   max-width: var(--measure);
 }
 
+/* A whole app window shrunk into the text column is unreadable, so the
+ * screenshots keep the column's left edge and run out to the right — the same
+ * move the hero shot makes. The 2.5rem allowance leaves room for a classic
+ * scrollbar, which 100vw counts and the layout width does not. */
 .station .shot {
   margin-top: 1.75rem;
+  margin-right: calc(50% - 50vw + 2.5rem);
+}
+
+.station .shot__frame {
+  max-width: 64rem;
 }
 
 .rail-return {
