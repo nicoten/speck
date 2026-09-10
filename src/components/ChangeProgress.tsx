@@ -14,10 +14,15 @@ export function ChangeProgress({
   change,
   activeArtifactId,
   onOpen,
+  onApply,
+  applying,
 }: {
   change: ChangeNode;
   activeArtifactId: string | undefined;
   onOpen: (doc: Doc) => void;
+  /** Absent for archived changes, which are already done. */
+  onApply?: () => void;
+  applying?: boolean;
 }) {
   const steps = change.artifacts;
   if (steps.length === 0) return null;
@@ -31,6 +36,7 @@ export function ChangeProgress({
   const fill = `${((lastComplete + 1) / steps.length) * 100}%`;
 
   return (
+    <div className="changebar">
     <nav className="stepper" aria-label={`${change.name} progress`}>
       <span className="stepper__fill" style={{ width: fill }} aria-hidden="true" />
 
@@ -75,5 +81,17 @@ export function ChangeProgress({
         );
       })}
     </nav>
+
+    {onApply && (
+      <button
+        className="button button--quiet changebar__apply"
+        onClick={onApply}
+        disabled={applying}
+        title="Open a Claude session in your terminal to implement this change"
+      >
+        {applying ? "Opening terminal…" : "Apply"}
+      </button>
+    )}
+    </div>
   );
 }

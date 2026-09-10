@@ -44,15 +44,39 @@ The CLI is looked up on `PATH`, then through a login shell, then in the usual
 install locations — a macOS app launched from Finder does not inherit your
 shell's `PATH`, so version-manager shims are invisible without that.
 
-## Read-only
+## Speck never edits your project
 
-Speck never writes to a project. There is no filesystem write capability in
-`tauri.conf.json`, shell execution is scoped to the `openspec` binary, and
-document reads go through the app's own commands, which refuse any path outside
-an open project.
+There is no filesystem write capability in `tauri.conf.json`, and document reads
+go through the app's own commands, which refuse any path outside an open
+project. Nothing Speck does changes a file under `openspec/`.
 
 Projects are watched while open, so a document rewritten by an agent or an
 editor refreshes in place, keeping your scroll position.
+
+## Handing work to Claude
+
+`Apply` on a change, and `+` beside **Active changes**, run OpenSpec's agent
+workflows: `/opsx:apply <change>` and `/opsx:propose <idea>`. Neither is a plain
+CLI command — `openspec instructions apply --json` produces a brief, and an
+agent carries it out.
+
+So Speck hands off rather than driving. It writes a short script to the OS temp
+directory and asks the system to open it, starting a Claude session in your
+terminal at the project root. The work happens where you can watch it and
+approve each edit, and Speck's own guarantee is untouched. Progress comes back
+on its own: the agent ticks boxes in `tasks.md`, the watcher notices, and
+`Tasks 3/14` climbs in the sidebar while you read.
+
+Two things keep the handoff narrow:
+
+- The webview asks for a **structured action** — apply a named change, or
+  propose an idea — never a command line. It cannot ask Speck to run something
+  else, and a change name is validated as a directory name rather than trusted.
+- The prompt reaches the session **through a file** rather than interpolated
+  into a command, so an idea containing `$(...)` or backticks arrives as text.
+
+`propose` is planning-only by OpenSpec's own rules: it writes the proposal,
+specs, design and tasks, then stops. `apply` is the one that implements code.
 
 ## Installing
 

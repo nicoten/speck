@@ -1,3 +1,4 @@
+mod agent;
 mod commands;
 mod library;
 pub mod openspec;
@@ -24,6 +25,7 @@ pub fn run() {
             commands::library_add,
             commands::library_remove,
             commands::cli_info,
+            commands::start_agent_session,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

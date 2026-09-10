@@ -14,6 +14,8 @@ interface Props {
   content: DocContent | null;
   error: string | null;
   onOpen: (doc: Doc) => void;
+  onApply: (changeName: string) => void;
+  applying: boolean;
 }
 
 /**
@@ -47,7 +49,15 @@ function title(ref_: DocRef): string {
   return ref_.doc.title;
 }
 
-export function Reader({ tree, ref_, content, error, onOpen }: Props) {
+export function Reader({
+  tree,
+  ref_,
+  content,
+  error,
+  onOpen,
+  onApply,
+  applying,
+}: Props) {
   const scroller = useRef<HTMLDivElement>(null);
 
   // A new document starts at the top; a refresh of the one already open keeps
@@ -73,6 +83,12 @@ export function Reader({ tree, ref_, content, error, onOpen }: Props) {
             change={ref_.change}
             activeArtifactId={ref_.artifactId}
             onOpen={onOpen}
+            onApply={
+              ref_.section === "activeChanges"
+                ? () => onApply(ref_.change!.name)
+                : undefined
+            }
+            applying={applying}
           />
         </div>
       )}

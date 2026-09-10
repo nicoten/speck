@@ -7,6 +7,7 @@ import { ProjectSwitcher } from "./components/ProjectSwitcher";
 import { Reader } from "./components/Reader";
 import { ReadingRail } from "./components/ReadingRail";
 import { Sidebar } from "./components/Sidebar";
+import { NewChangeForm } from "./components/NewChangeForm";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
 import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updates";
@@ -26,6 +27,11 @@ export default function App() {
     Number(localStorage.getItem(RAIL_WIDTH)) || 268,
   );
   const [update, setUpdate] = useState<UpdateState>({ status: "idle" });
+  const [newChangeOpen, setNewChangeOpen] = useState(false);
+  const [handoff, setHandoff] = useState<{ busy: boolean; error: string | null }>({
+    busy: false,
+    error: null,
+  });
 
   const openPathRef = useRef<string | null>(null);
   openPathRef.current = openPath;
@@ -174,6 +180,39 @@ export default function App() {
     [refreshLibrary],
   );
 
+  // ------------------------------------------------------- agent handoff
+
+  // Speck does not do the work: OpenSpec's apply and propose are agent
+  // workflows, so both open a Claude session in the terminal, where you can see
+  // what it does and approve it. Progress arrives back through the watcher.
+  const startSession = useCallback(
+    async (action: ipc.AgentAction): Promise<boolean> => {
+      if (!tree) return false;
+      setHandoff({ busy: true, error: null });
+      try {
+        await ipc.startAgentSession(tree.root, action);
+        setHandoff({ busy: false, error: null });
+        return true;
+      } catch (e) {
+        setHandoff({ busy: false, error: String(e) });
+        return false;
+      }
+    },
+    [tree],
+  );
+
+  const applyChange = useCallback(
+    (change: string) => void startSession({ kind: "apply", change }),
+    [startSession],
+  );
+
+  const proposeChange = useCallback(
+    async (idea: string) => {
+      if (await startSession({ kind: "propose", idea })) setNewChangeOpen(false);
+    },
+    [startSession],
+  );
+
   // ---------------------------------------------------------- navigation
 
   const nav = useMemo(
@@ -274,6 +313,10 @@ export default function App() {
           onOpen={(doc) => void openDoc(doc)}
           collapsed={collapsed}
           onToggle={toggle}
+          onNewChange={() => {
+            setHandoff({ busy: false, error: null });
+            setNewChangeOpen(true);
+          }}
         />
         <div
           className="divider"
@@ -286,10 +329,21 @@ export default function App() {
           tree={tree}
           ref_={currentRef}
           content={content}
-          error={docError ?? error}
+          error={docError ?? handoff.error ?? error}
           onOpen={(doc) => void openDoc(doc)}
+          onApply={applyChange}
+          applying={handoff.busy}
         />
       </div>
+
+      {newChangeOpen && (
+        <NewChangeForm
+          onStart={(idea) => void proposeChange(idea)}
+          onCancel={() => setNewChangeOpen(false)}
+          error={handoff.error}
+          busy={handoff.busy}
+        />
+      )}
 
       <ReadingRail
         prev={nav.prev}

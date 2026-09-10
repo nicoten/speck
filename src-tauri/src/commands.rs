@@ -1,6 +1,7 @@
 //! The IPC surface. Deliberately small: the webview loads a project, reads a
 //! document, and manages the library. Nothing here writes to a project.
 
+use crate::agent::{self, AgentAction};
 use crate::library::{Library, ProjectEntry};
 use crate::openspec::{self, DocContent, ProjectTree};
 use crate::watch::WatchState;
@@ -132,6 +133,26 @@ pub fn library_remove(state: State<'_, AppState>, path: String) -> CmdResult<()>
 #[tauri::command]
 pub fn cli_info() -> Option<String> {
     openspec::cli::version()
+}
+
+/// Hand an OpenSpec workflow to a Claude session in the user's terminal.
+///
+/// The project must be one that is open, so this cannot be pointed at an
+/// arbitrary directory, and the action is structured rather than a command line.
+#[tauri::command]
+pub fn start_agent_session(
+    state: State<'_, AppState>,
+    path: String,
+    action: AgentAction,
+) -> CmdResult<String> {
+    let root = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| format!("{path}: {e}"))?;
+
+    if !state.allowed.0.lock().unwrap().contains(&root) {
+        return Err(format!("{} is not an open project", root.display()));
+    }
+    agent::start(&root, &action).map_err(to_string_err)
 }
 
 pub fn init_state(app: &AppHandle) -> AppState {

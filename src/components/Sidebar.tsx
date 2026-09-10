@@ -18,6 +18,10 @@ interface Props {
   onToggle: (key: string) => void;
 }
 
+interface SidebarProps extends Props {
+  onNewChange: () => void;
+}
+
 function Progress({ of }: { of: ChangeNode }) {
   const label = progressLabel(of);
   if (!label) return null;
@@ -215,7 +219,14 @@ function emptyMessage(kind: Section["kind"]): string {
   }
 }
 
-export function Sidebar({ tree, openPath, onOpen, collapsed, onToggle }: Props) {
+export function Sidebar({
+  tree,
+  openPath,
+  onOpen,
+  collapsed,
+  onToggle,
+  onNewChange,
+}: SidebarProps) {
   return (
     <nav className="sidebar" aria-label="Project documents">
       {tree.sections.map((section) => (
@@ -223,6 +234,16 @@ export function Sidebar({ tree, openPath, onOpen, collapsed, onToggle }: Props) 
           <div className="section__head">
             <span className="section__title">{SECTION_LABELS[section.kind]}</span>
             <span className="section__rule" />
+            {section.kind === "activeChanges" && (
+              <button
+                className="section__add"
+                onClick={onNewChange}
+                title="Plan a new change"
+                aria-label="Plan a new change"
+              >
+                +
+              </button>
+            )}
             <span className="section__count">{count(section)}</span>
           </div>
 

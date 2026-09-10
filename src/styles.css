@@ -368,6 +368,23 @@ button {
   background: var(--rule);
 }
 
+.section__add {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  color: var(--ink-faint);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.section__add:hover {
+  background: var(--paper-raised);
+  color: var(--accent-strong);
+}
+
 .section__empty {
   padding: 2px 14px;
   color: var(--ink-faint);
@@ -562,6 +579,23 @@ button {
   padding: 10px 40px;
   background: var(--paper);
   border-bottom: 1px solid var(--rule);
+}
+
+/* The change bar: progress on the left, the action it enables on the right. */
+.changebar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.changebar .stepper {
+  flex: 1;
+}
+
+.changebar__apply {
+  flex: none;
+  padding: 4px 14px;
+  font-size: 12px;
 }
 
 /* The change's progress through its artifacts: one compact bar. A settled step
@@ -1210,6 +1244,86 @@ button {
   opacity: 1;
 }
 
+/* A sheet over the window: used only where a decision needs the whole
+   attention, which so far is describing a change to plan. */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(16 22 20 / 28%);
+}
+
+.sheet__panel {
+  width: min(560px, 100%);
+  padding: 22px 24px 18px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 0 18px 48px rgb(16 22 20 / 22%);
+}
+
+.sheet__title {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px;
+}
+
+.sheet__lede {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+
+.sheet__field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.sheet__field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.sheet__field::placeholder {
+  color: var(--ink-faint);
+}
+
+.sheet__error {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--op-removed);
+}
+
+.sheet__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.sheet__hint {
+  margin: 8px 0 0;
+  text-align: right;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
 /* One document failed to render; the rest of the app is fine. */
 .docerror {
   border-left: 2px solid var(--op-removed);
@@ -1270,7 +1384,87 @@ button {
   }
 
   .notice,
-  /* One document failed to render; the rest of the app is fine. */
+  /* A sheet over the window: used only where a decision needs the whole
+   attention, which so far is describing a change to plan. */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(16 22 20 / 28%);
+}
+
+.sheet__panel {
+  width: min(560px, 100%);
+  padding: 22px 24px 18px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 0 18px 48px rgb(16 22 20 / 22%);
+}
+
+.sheet__title {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px;
+}
+
+.sheet__lede {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  margin: 0 0 14px;
+}
+
+.sheet__field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.sheet__field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.sheet__field::placeholder {
+  color: var(--ink-faint);
+}
+
+.sheet__error {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--op-removed);
+}
+
+.sheet__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.sheet__hint {
+  margin: 8px 0 0;
+  text-align: right;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* One document failed to render; the rest of the app is fine. */
 .docerror {
   border-left: 2px solid var(--op-removed);
   padding-left: 16px;

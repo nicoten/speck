@@ -137,6 +137,18 @@ describe("update notice", () => {
   });
 });
 
+describe("agent handoff", () => {
+  it("keeps the apply action beside the progress bar", () => {
+    expect(rule(".changebar")).toContain("display: flex");
+    expect(rule(".changebar__apply")).toContain("flex: none");
+  });
+
+  it("gives the new-change sheet a focus ring and a readable field", () => {
+    expect(rule(".sheet__field:focus-visible")).toContain("var(--accent)");
+    expect(rule(".sheet__panel")).toContain("var(--paper)");
+  });
+});
+
 describe("responsiveness", () => {
   it("keeps a side gutter at phone width", () => {
     const narrow = css.slice(css.indexOf("@media (max-width: 720px)"));
