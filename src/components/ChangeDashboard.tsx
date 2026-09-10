@@ -3,6 +3,7 @@ import * as ipc from "../lib/ipc";
 import { artifactTrail, isComplete, progressLabel } from "../lib/artifact";
 import { parseTasks } from "../lib/markdown/parse";
 import type { ArtifactGroup, ChangeNode, Doc, Section } from "../lib/types";
+import type { RunKind } from "./ConfirmRun";
 import { ChangeProgress } from "./ChangeProgress";
 import { PullRequestLink } from "./PullRequestLink";
 import { TaskCheckbox } from "./TaskCheckbox";
@@ -122,7 +123,7 @@ export function ChangeDashboard({
   change,
   section,
   onOpenDoc,
-  onApply,
+  onRun,
   applying,
   refreshKey,
   root,
@@ -130,7 +131,8 @@ export function ChangeDashboard({
   change: ChangeNode;
   section: Section["kind"];
   onOpenDoc: (doc: Doc) => void;
-  onApply?: () => void;
+  /** Absent for archived changes: their workflow is finished. */
+  onRun?: (kind: RunKind) => void;
   applying: boolean;
   refreshKey: number;
   root: string;
@@ -145,6 +147,9 @@ export function ChangeDashboard({
   const progress = progressLabel(change);
   const total = (tasks?.length ?? 0) || (change.totalTasks ?? 0);
   const pct = total > 0 ? Math.round((done.length / total) * 100) : 0;
+  // Unknown counts as work left: better to lead with Apply than to suggest a
+  // change is ready to verify when the tasks have not been read yet.
+  const tasksLeft = !loaded || remaining.length > 0 || total === 0;
 
   const toggle = (task: DashTask) => {
     if (!path) return;
@@ -172,10 +177,36 @@ export function ChangeDashboard({
             </p>
             <PullRequestLink root={root} change={change.name} />
           </div>
-          {onApply && (
-            <button className="button" onClick={onApply} disabled={applying}>
-              {applying ? "Running…" : "Apply"}
-            </button>
+          {onRun && (
+            <div className="dash__actions">
+              {/* Emphasis follows the workflow: implement while tasks remain,
+                  then verify. Archiving is quiet — it rewrites the main specs
+                  and moves the change. */}
+              <button
+                className={`button${tasksLeft ? "" : " button--quiet"}`}
+                onClick={() => onRun("apply")}
+                disabled={applying}
+                title="Work through this change's tasks"
+              >
+                Apply
+              </button>
+              <button
+                className={`button${tasksLeft ? " button--quiet" : ""}`}
+                onClick={() => onRun("verify")}
+                disabled={applying}
+                title="Check the implementation against this change's specs"
+              >
+                Verify
+              </button>
+              <button
+                className="button button--quiet"
+                onClick={() => onRun("archive")}
+                disabled={applying}
+                title="Fold the delta specs into the main specs and archive this change"
+              >
+                Archive
+              </button>
+            </div>
           )}
         </header>
 

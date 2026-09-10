@@ -74,6 +74,8 @@ export const cliInfo = () => invoke<string | null>("cli_info");
  */
 export type AgentAction =
   | { kind: "apply"; change: string }
+  | { kind: "verify"; change: string }
+  | { kind: "archive"; change: string }
   | { kind: "propose"; idea: string };
 
 /**

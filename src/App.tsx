@@ -22,7 +22,7 @@ import { Sidebar } from "./components/Sidebar";
 import { AgentPanel } from "./components/AgentPanel";
 import { ChangeDashboard } from "./components/ChangeDashboard";
 import { GitHubMark } from "./components/GitHubMark";
-import { ConfirmRun, type RunRequest } from "./components/ConfirmRun";
+import { ConfirmRun, type RunKind, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
 import {
@@ -282,16 +282,23 @@ export default function App() {
   const confirmRun = useCallback(
     async (opts: { idea?: string; authority: Authority; terminal: boolean }) => {
       if (!runRequest) return;
+      const { kind, change } = runRequest;
       const action: ipc.AgentAction =
-        runRequest.change !== undefined
-          ? { kind: "apply", change: runRequest.change }
-          : { kind: "propose", idea: opts.idea ?? "" };
+        kind === "propose"
+          ? { kind: "propose", idea: opts.idea ?? "" }
+          : { kind, change: change ?? "" };
       if (await beginRun({ action, authority: opts.authority, terminal: opts.terminal })) {
         setRunRequest(null);
       }
     },
     [runRequest, beginRun],
   );
+
+  /** Open the confirmation for a workflow on a named change. */
+  const askToRun = useCallback((kind: RunKind, change: string) => {
+    setHandoff({ busy: false, error: null });
+    setRunRequest({ kind, change });
+  }, []);
 
   const activeSession = tree ? runningFor(sessions, tree.root) : undefined;
   const panelSession = activeSession ?? sessions.find((s) => s.root === tree?.root);
@@ -419,7 +426,7 @@ export default function App() {
           onToggle={toggle}
           onNewChange={() => {
             setHandoff({ busy: false, error: null });
-            setRunRequest({});
+            setRunRequest({ kind: "propose" });
           }}
           openChange={dashboard ? openChange!.name : null}
           onOpenChange={(name) => {
@@ -443,12 +450,9 @@ export default function App() {
             change={dashboard}
             section={openChange!.section}
             onOpenDoc={(doc) => void openDoc(doc)}
-            onApply={
+            onRun={
               openChange!.section === "activeChanges"
-                ? () => {
-                    setHandoff({ busy: false, error: null });
-                    setRunRequest({ change: dashboard.name });
-                  }
+                ? (kind) => askToRun(kind, dashboard.name)
                 : undefined
             }
             applying={activeSession !== undefined}
@@ -461,10 +465,7 @@ export default function App() {
             content={content}
             error={docError ?? handoff.error ?? error}
             onOpen={(doc) => void openDoc(doc)}
-            onApply={(change) => {
-              setHandoff({ busy: false, error: null });
-              setRunRequest({ change });
-            }}
+            onApply={(change) => askToRun("apply", change)}
             applying={activeSession !== undefined}
             onToggleTask={(path, text, occurrence, done) =>
               void toggleTask(path, text, occurrence, done)

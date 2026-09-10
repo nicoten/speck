@@ -202,6 +202,13 @@ describe("task checkboxes", () => {
   });
 });
 
+describe("workflow actions", () => {
+  it("keeps the three workflow buttons on one row", () => {
+    expect(rule(".dash__actions")).toContain("display: flex");
+    expect(rule(".dash__actions")).toContain("flex-wrap: wrap");
+  });
+});
+
 describe("agent handoff", () => {
   it("keeps the apply action beside the progress bar", () => {
     expect(rule(".changebar")).toContain("display: flex");

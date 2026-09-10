@@ -26,6 +26,13 @@ pub enum AgentAction {
     /// Plan a new change: `/opsx:propose <idea>`. Planning only — the OpenSpec
     /// workflow forbids touching project code in this step.
     Propose { idea: String },
+    /// Check the implementation against the change's specs: `/opsx:verify`.
+    /// Reads and reports; it is not meant to change code.
+    Verify { change: String },
+    /// Fold the delta specs into the main specs and archive the change:
+    /// `/opsx:archive`. The workflow asks how to merge before it does, which is
+    /// why it wants somewhere to ask.
+    Archive { change: String },
 }
 
 impl AgentAction {
@@ -35,6 +42,14 @@ impl AgentAction {
             AgentAction::Apply { change } => {
                 let change = validate_change_name(change)?;
                 Ok(format!("/opsx:apply {change}"))
+            }
+            AgentAction::Verify { change } => {
+                let change = validate_change_name(change)?;
+                Ok(format!("/opsx:verify {change}"))
+            }
+            AgentAction::Archive { change } => {
+                let change = validate_change_name(change)?;
+                Ok(format!("/opsx:archive {change}"))
             }
             AgentAction::Propose { idea } => {
                 let idea = idea.trim();
@@ -53,6 +68,8 @@ impl AgentAction {
     pub fn label(&self) -> String {
         match self {
             AgentAction::Apply { change } => format!("Applying {change}"),
+            AgentAction::Verify { change } => format!("Verifying {change}"),
+            AgentAction::Archive { change } => format!("Archiving {change}"),
             AgentAction::Propose { .. } => "Planning a change".to_string(),
         }
     }
@@ -61,6 +78,8 @@ impl AgentAction {
     fn slug(&self) -> &'static str {
         match self {
             AgentAction::Apply { .. } => "apply",
+            AgentAction::Verify { .. } => "verify",
+            AgentAction::Archive { .. } => "archive",
             AgentAction::Propose { .. } => "propose",
         }
     }
@@ -185,6 +204,55 @@ mod tests {
             action.prompt().unwrap(),
             "/opsx:propose add a CSV export to the report toolbar"
         );
+    }
+
+    #[test]
+    fn builds_the_verify_and_archive_commands() {
+        assert_eq!(
+            AgentAction::Verify {
+                change: "report-toolbar".into()
+            }
+            .prompt()
+            .unwrap(),
+            "/opsx:verify report-toolbar"
+        );
+        assert_eq!(
+            AgentAction::Archive {
+                change: "report-toolbar".into()
+            }
+            .prompt()
+            .unwrap(),
+            "/opsx:archive report-toolbar"
+        );
+    }
+
+    #[test]
+    fn labels_every_action_for_the_panel() {
+        let change = "add-auth".to_string();
+        assert_eq!(
+            AgentAction::Apply { change: change.clone() }.label(),
+            "Applying add-auth"
+        );
+        assert_eq!(
+            AgentAction::Verify { change: change.clone() }.label(),
+            "Verifying add-auth"
+        );
+        assert_eq!(
+            AgentAction::Archive { change }.label(),
+            "Archiving add-auth"
+        );
+    }
+
+    #[test]
+    fn validates_the_change_name_for_every_action_that_takes_one() {
+        // The name reaches a command line whichever workflow uses it.
+        for action in [
+            AgentAction::Apply { change: "a; rm -rf /".into() },
+            AgentAction::Verify { change: "../escape".into() },
+            AgentAction::Archive { change: "--dangerously-skip-permissions".into() },
+        ] {
+            assert!(action.prompt().is_err(), "should reject {action:?}");
+        }
     }
 
     #[test]

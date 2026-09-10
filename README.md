@@ -125,10 +125,19 @@ an arbitrary URL handed to it.
 
 ## Running OpenSpec workflows
 
-`Apply` on a change, and `+` beside **Active changes**, run OpenSpec's agent
-workflows: `/opsx:apply <change>` and `/opsx:propose <idea>`. Neither is a plain
-CLI command — `openspec instructions apply --json` produces a brief, and an
-agent carries it out.
+The whole OpenSpec circle runs from the app. `+` beside **Active changes**
+proposes one; a change's dashboard carries **Apply**, **Verify** and
+**Archive**. None of these is a plain CLI command — `openspec instructions
+apply --json` produces a brief, and an agent carries it out.
+
+Emphasis follows the workflow rather than sitting still: Apply leads while
+tasks remain, Verify leads once they are all ticked, and Archive stays quiet
+because it rewrites your main specs and moves the change.
+
+**Archive is better run in your terminal**, and the confirmation says so. The
+workflow asks how to merge the change's delta specs into the main specs —
+sync now, archive without syncing, or cancel — before doing anything. Run
+in-app, headless, there is nobody to ask, so Claude decides that alone.
 
 The session runs inside Speck and streams what it is doing into a panel above
 the reading rail: the files it reads and edits, the commands it runs, what it

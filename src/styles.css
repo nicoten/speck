@@ -987,6 +987,17 @@ button {
   min-width: 0;
 }
 
+.dash__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dash__actions .button {
+  padding: 5px 14px;
+  font-size: 12.5px;
+}
+
 .dash__name {
   font-family: var(--mono);
   font-size: 20px;
