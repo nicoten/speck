@@ -51,6 +51,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
   const [cliVersion, setCliVersion] = useState<string | null>(null);
+  const [repo, setRepo] = useState<ipc.Repo | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [railWidth, setRailWidth] = useState(() =>
     Number(localStorage.getItem(RAIL_WIDTH)) || 268,
@@ -136,6 +137,11 @@ export default function App() {
         setTreeVersion((v) => v + 1);
         setError(null);
         if (!keepDoc) setCollapsed(collapsedArchive(next));
+        // Best effort: a project need not be in a repository at all.
+        void ipc
+          .projectRepo(next.root)
+          .then(setRepo)
+          .catch(() => setRepo(null));
 
         // Keep reading the same document across a refresh when it survived.
         const stay = keepDoc && openPathRef.current
@@ -369,6 +375,15 @@ export default function App() {
           onRemove={removeProject}
         />
         <div className="topbar__meta">
+          {repo && (
+            <button
+              className="topbar__repo"
+              onClick={() => void ipc.openForgeUrl(tree.root, repo.webUrl).catch(() => {})}
+              title={`Open ${repo.owner}/${repo.name} on ${repo.host}`}
+            >
+              {repo.owner}/{repo.name}
+            </button>
+          )}
           <UpdateNotice
             state={update}
             onInstall={() => void installUpdate(setUpdate)}
@@ -427,6 +442,7 @@ export default function App() {
             }
             applying={activeSession !== undefined}
             refreshKey={treeVersion}
+            root={tree.root}
           />
         ) : (
           <Reader

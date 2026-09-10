@@ -4,6 +4,7 @@ import { artifactTrail, isComplete, progressLabel } from "../lib/artifact";
 import { parseTasks } from "../lib/markdown/parse";
 import type { ArtifactGroup, ChangeNode, Doc, Section } from "../lib/types";
 import { ChangeProgress } from "./ChangeProgress";
+import { PullRequestLink } from "./PullRequestLink";
 import { TaskCheckbox } from "./TaskCheckbox";
 
 /** A task, with enough to address it in the file when its box is clicked. */
@@ -124,6 +125,7 @@ export function ChangeDashboard({
   onApply,
   applying,
   refreshKey,
+  root,
 }: {
   change: ChangeNode;
   section: Section["kind"];
@@ -131,6 +133,7 @@ export function ChangeDashboard({
   onApply?: () => void;
   applying: boolean;
   refreshKey: number;
+  root: string;
 }) {
   const { tasks, path, mark } = useTasks(change, refreshKey);
   const [showDone, setShowDone] = useState(false);
@@ -167,6 +170,7 @@ export function ChangeDashboard({
                 : (change.status ?? "active")}
               {progress && ` · ${progress} tasks`}
             </p>
+            <PullRequestLink root={root} change={change.name} />
           </div>
           {onApply && (
             <button className="button" onClick={onApply} disabled={applying}>

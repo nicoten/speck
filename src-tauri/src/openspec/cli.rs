@@ -16,6 +16,7 @@ use std::time::Duration;
 /// Resolved once per tool.
 static OPENSPEC: OnceLock<Option<Resolved>> = OnceLock::new();
 static CLAUDE: OnceLock<Option<Resolved>> = OnceLock::new();
+static GH: OnceLock<Option<Resolved>> = OnceLock::new();
 
 #[derive(Debug, Clone)]
 pub struct Resolved {
@@ -70,6 +71,11 @@ pub fn resolved() -> Option<&'static Resolved> {
 /// The `claude` binary, for handing work to a session.
 pub fn claude() -> Option<&'static Resolved> {
     CLAUDE.get_or_init(|| resolve("claude")).as_ref()
+}
+
+/// The `gh` binary, for asking GitHub about a change's pull request.
+pub fn gh() -> Option<&'static Resolved> {
+    GH.get_or_init(|| resolve("gh")).as_ref()
 }
 
 /// Locate a tool the same way for every tool: PATH as inherited, then the

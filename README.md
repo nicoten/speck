@@ -92,6 +92,37 @@ Tasks are read from `tasks.md` on the fly, so an agent ticking boxes updates the
 dashboard as it works — and the boxes are clickable, so you can tick one off
 yourself when you have verified it by hand.
 
+## Pull requests, and the repository
+
+OpenSpec records no pull request. There is no field for one, nothing in the CLI
+knows about branches, and a change's `.openspec.yaml` holds workflow flags, not
+links. So any link is **inference**, and Speck says so rather than presenting a
+guess as a recorded fact.
+
+Two strategies, in order:
+
+1. **A branch named after the change.** One call, exact where that convention
+   holds — but it is a convention, not a rule, and plenty of projects do not
+   follow it.
+2. **Pull requests containing commits that touched the change's own files**
+   (`openspec/changes/<name>/`, and its dated path once archived). This works
+   whatever a project calls its branches, which is why it exists.
+
+The dashboard shows **all** of them, because a change is usually touched by more
+than one: proposing it, applying it, archiving it. Picking one would mean
+picking wrong — the most recent commit under an archived change is the *archive*
+commit, so "the latest pull request" is the one that filed it away, not the one
+that did the work.
+
+When neither strategy finds anything, the row says what was looked for. When
+`gh` is missing or not signed in, it says that instead of showing an empty
+space. Lookups are cached for a minute.
+
+The project's repository is read from `git remote get-url origin` and linked in
+the top bar. Credentials in a remote are stripped, so a token never reaches the
+screen. Links open only on that project's own forge host — the app will not open
+an arbitrary URL handed to it.
+
 ## Running OpenSpec workflows
 
 `Apply` on a change, and `+` beside **Active changes**, run OpenSpec's agent

@@ -1,5 +1,6 @@
 mod agent;
 mod commands;
+mod forge;
 mod library;
 pub mod openspec;
 mod tasks;
@@ -30,6 +31,9 @@ pub fn run() {
             commands::stop_agent_session,
             commands::running_sessions,
             commands::set_task_done,
+            commands::project_repo,
+            commands::change_pull_request,
+            commands::open_forge_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

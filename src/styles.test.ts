@@ -166,6 +166,23 @@ describe("change dashboard", () => {
   });
 });
 
+describe("forge links", () => {
+  it("gives each pull request state the tone people already read", () => {
+    expect(rule(".pr__state--open")).toContain("var(--op-added)");
+    expect(rule(".pr__state--merged")).toContain("var(--op-renamed)");
+    expect(rule(".pr__state--closed")).toContain("var(--op-removed)");
+  });
+
+  it("keeps a missing pull request quiet rather than alarming", () => {
+    expect(rule(".prs--quiet")).toContain("var(--ink-faint)");
+    expect(rule(".prs__basis")).toContain("var(--ink-faint)");
+  });
+
+  it("marks the repository link as a link on hover", () => {
+    expect(rule(".topbar__repo:hover")).toContain("var(--accent-strong)");
+  });
+});
+
 describe("task checkboxes", () => {
   it("makes a live box look like a control and a done one look done", () => {
     expect(rule(".taskbox--live")).toContain("cursor: pointer");

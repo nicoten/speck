@@ -3,6 +3,7 @@
 
 use crate::agent::session::{Authority, RunningSession, Sessions};
 use crate::agent::{self, AgentAction};
+use crate::forge::{PullRequestCache, PullRequestLookup, Repo};
 use crate::library::{Library, ProjectEntry};
 use crate::openspec::{self, DocContent, ProjectTree};
 use crate::watch::WatchState;
@@ -21,6 +22,7 @@ pub struct AppState {
     pub allowed: Allowed,
     pub watch: WatchState,
     pub sessions: std::sync::Arc<Sessions>,
+    pub pull_requests: PullRequestCache,
 }
 
 impl AppState {
@@ -30,6 +32,7 @@ impl AppState {
             allowed: Allowed::default(),
             watch: WatchState::default(),
             sessions: std::sync::Arc::new(Sessions::default()),
+            pull_requests: PullRequestCache::default(),
         }
     }
 }
@@ -220,6 +223,49 @@ pub fn set_task_done(
     drop(allowed);
 
     crate::tasks::set_done(&file, &text, occurrence, done).map_err(to_string_err)
+}
+
+/// Require that a path is a project Speck has open.
+fn open_root(state: &State<'_, AppState>, path: &str) -> CmdResult<PathBuf> {
+    let root = PathBuf::from(path)
+        .canonicalize()
+        .map_err(|e| format!("{path}: {e}"))?;
+    if !state.allowed.0.lock().unwrap().contains(&root) {
+        return Err(format!("{} is not an open project", root.display()));
+    }
+    Ok(root)
+}
+
+/// The repository this project sits in, if it is in one with a remote.
+#[tauri::command]
+pub fn project_repo(state: State<'_, AppState>, path: String) -> CmdResult<Option<Repo>> {
+    let root = open_root(&state, &path)?;
+    Ok(crate::forge::repo_for(&root))
+}
+
+/// The pull request for a change, found by the branch named after it.
+///
+/// OpenSpec records no pull request, so this is inference from a convention,
+/// and the answer says which branch was looked for when nothing matched.
+#[tauri::command]
+pub fn change_pull_request(
+    state: State<'_, AppState>,
+    path: String,
+    change: String,
+) -> CmdResult<PullRequestLookup> {
+    let root = open_root(&state, &path)?;
+    Ok(state.pull_requests.lookup(&root, &change))
+}
+
+/// Open a link belonging to this project's forge, and nothing else.
+#[tauri::command]
+pub fn open_forge_url(
+    state: State<'_, AppState>,
+    path: String,
+    url: String,
+) -> CmdResult<()> {
+    let root = open_root(&state, &path)?;
+    crate::forge::open_url(&root, &url).map_err(to_string_err)
 }
 
 pub fn init_state(app: &AppHandle) -> AppState {
