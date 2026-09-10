@@ -1,12 +1,10 @@
+import { useState } from "react";
 import type { ChangeNode, Doc, ProjectTree, SpecNode } from "../lib/types";
 import { progressLabel } from "../lib/artifact";
 
 /** Every spec in the tree, flattened, with its requirement count. */
 function flatSpecs(nodes: SpecNode[]): SpecNode[] {
-  return nodes.flatMap((n) => [
-    ...(n.doc ? [n] : []),
-    ...flatSpecs(n.children),
-  ]);
+  return nodes.flatMap((n) => [...(n.doc ? [n] : []), ...flatSpecs(n.children)]);
 }
 
 function sectionItems(tree: ProjectTree) {
@@ -28,32 +26,92 @@ function sectionItems(tree: ProjectTree) {
 function standing(change: ChangeNode): string {
   const current = change.artifacts.find((a) => a.state === "current");
   if (current) return `on ${current.label.toLowerCase()}`;
-  const allDone = change.artifacts.every((a) => a.state === "complete");
-  return allDone ? "every step settled" : "not started";
+  return change.artifacts.every((a) => a.state === "complete")
+    ? "every step settled"
+    : "not started";
+}
+
+type Pane = "active" | "specs" | "archive";
+
+function Card({
+  label,
+  count,
+  note,
+  selected,
+  onSelect,
+}: {
+  label: string;
+  count: number;
+  note: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      className="card"
+      aria-pressed={selected}
+      onClick={onSelect}
+    >
+      <span className="card__label">{label}</span>
+      <span className="card__count">{count}</span>
+      <span className="card__note">{note}</span>
+    </button>
+  );
+}
+
+function ChangeRows({
+  changes,
+  onOpenChange,
+  dated,
+}: {
+  changes: ChangeNode[];
+  onOpenChange: (name: string) => void;
+  dated?: boolean;
+}) {
+  return (
+    <ul className="home__changes">
+      {changes.map((change) => {
+        const progress = progressLabel(change);
+        return (
+          <li key={change.name}>
+            <button className="home__change" onClick={() => onOpenChange(change.name)}>
+              <span className="home__change-name">{change.name}</span>
+              <span className="home__change-standing">
+                {dated ? (change.archivedOn ?? "archived") : standing(change)}
+              </span>
+              {progress && <span className="progress">{progress}</span>}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 /**
- * The project at a glance, and where reading starts.
+ * The project at a glance.
  *
- * This is the home view because `config.yaml` was a poor first thing to see:
- * it is the least interesting file in an OpenSpec project, and it opened by
- * accident of being first in the reading order.
+ * The three counts are the selector: whichever is chosen is what the list
+ * beneath shows. That way nothing needs a section of its own competing for the
+ * top of the page, and the numbers lead somewhere instead of decorating.
  */
 export function ProjectDashboard({
   tree,
   onOpenDoc,
   onOpenChange,
   onNewChange,
-  onStartReading,
 }: {
   tree: ProjectTree;
   onOpenDoc: (doc: Doc) => void;
   onOpenChange: (name: string) => void;
   onNewChange: () => void;
-  onStartReading: () => void;
 }) {
   const { context, active, archive, specs } = sectionItems(tree);
+  const [pane, setPane] = useState<Pane>(active.length > 0 ? "active" : "specs");
+
   const requirements = specs.reduce((n, s) => n + (s.requirementCount ?? 0), 0);
+  const tasksDone = active.reduce((n, c) => n + (c.completedTasks ?? 0), 0);
+  const tasksTotal = active.reduce((n, c) => n + (c.totalTasks ?? 0), 0);
 
   return (
     <div className="reader">
@@ -65,8 +123,7 @@ export function ProjectDashboard({
               {/* The schema decides the order everything is read in, so it is
                   worth one plain sentence rather than a label in the chrome. */}
               Reads{" "}
-              {tree.schema.artifacts.map((a) => a.id).join(" → ") ||
-                "in schema order"}
+              {tree.schema.artifacts.map((a) => a.id).join(" → ") || "in schema order"}
               {tree.schema.assumed && " (assumed — the schema could not be read)"}
             </p>
           </div>
@@ -77,115 +134,103 @@ export function ProjectDashboard({
           </div>
         </header>
 
-        <section className="dash__section">
-          <h2 className="dash__h2">
-            In progress
-            <span className="dash__count">{active.length}</span>
-          </h2>
-          {active.length === 0 && (
-            <p className="dash__empty">
-              Nothing in progress. Start one and Claude will write its proposal,
-              specs, design and tasks.
-            </p>
-          )}
-          <ul className="home__changes">
-            {active.map((change) => {
-              const progress = progressLabel(change);
-              return (
-                <li key={change.name}>
-                  <button
-                    className="home__change"
-                    onClick={() => onOpenChange(change.name)}
-                  >
-                    <span className="home__change-name">{change.name}</span>
-                    <span className="home__change-standing">{standing(change)}</span>
-                    {progress && <span className="progress">{progress}</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <div className="cards">
+          <Card
+            label="Active changes"
+            count={active.length}
+            note={
+              tasksTotal > 0
+                ? `${tasksDone} of ${tasksTotal} tasks done`
+                : "no tasks written yet"
+            }
+            selected={pane === "active"}
+            onSelect={() => setPane("active")}
+          />
+          <Card
+            label="Open specs"
+            count={specs.length}
+            note={
+              requirements > 0 ? `${requirements} requirements` : "no requirements yet"
+            }
+            selected={pane === "specs"}
+            onSelect={() => setPane("specs")}
+          />
+          <Card
+            label="Archived"
+            count={archive.length}
+            note={
+              archive[0]?.archivedOn
+                ? `latest ${archive[0].archivedOn}`
+                : "nothing archived"
+            }
+            selected={pane === "archive"}
+            onSelect={() => setPane("archive")}
+          />
+        </div>
 
-        <section className="dash__section">
-          <h2 className="dash__h2">
-            Specified today
-            <span className="dash__count">
-              {specs.length} {specs.length === 1 ? "capability" : "capabilities"}
-              {requirements > 0 && `, ${requirements} requirements`}
-            </span>
-          </h2>
-          {specs.length === 0 ? (
-            <p className="dash__empty">
-              No specs yet. They arrive when a change is archived and its deltas
-              are folded in.
-            </p>
-          ) : (
-            <ul className="home__specs">
-              {specs.map((spec) => (
-                <li key={spec.id}>
-                  <button
-                    className="home__spec"
-                    onClick={() => spec.doc && onOpenDoc(spec.doc)}
-                  >
-                    <span>{spec.id}</span>
-                    {spec.requirementCount !== null && (
-                      <span className="home__spec-count">{spec.requirementCount}</span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {pane === "active" && (
+          <section className="dash__section">
+            {active.length === 0 ? (
+              <p className="dash__empty">
+                Nothing in progress. Start one and Claude will write its
+                proposal, specs, design and tasks.
+              </p>
+            ) : (
+              <ChangeRows changes={active} onOpenChange={onOpenChange} />
+            )}
+          </section>
+        )}
 
-        <section className="dash__section">
-          <h2 className="dash__h2">
-            Read it through
-            <span className="dash__count">{tree.docCount} documents</span>
-          </h2>
-          <p className="dash__empty">
-            Grouped by where each document sits in the workflow, and numbered so
-            it reads front to back.
-          </p>
+        {pane === "specs" && (
+          <section className="dash__section">
+            {specs.length === 0 ? (
+              <p className="dash__empty">
+                No specs yet. They arrive when a change is archived and its
+                deltas are folded in.
+              </p>
+            ) : (
+              <ul className="home__specs">
+                {specs.map((spec) => (
+                  <li key={spec.id}>
+                    <button
+                      className="home__spec"
+                      onClick={() => spec.doc && onOpenDoc(spec.doc)}
+                    >
+                      <span>{spec.id}</span>
+                      {spec.requirementCount !== null && (
+                        <span className="home__spec-count">
+                          {spec.requirementCount}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {pane === "archive" && (
+          <section className="dash__section">
+            {archive.length === 0 ? (
+              <p className="dash__empty">
+                Nothing archived yet. A change is archived once its work is done
+                and its specs are folded in.
+              </p>
+            ) : (
+              <ChangeRows changes={archive} onOpenChange={onOpenChange} dated />
+            )}
+          </section>
+        )}
+
+        {context.length > 0 && (
           <div className="home__links">
-            <button className="button button--quiet" onClick={onStartReading}>
-              Start at the beginning
-            </button>
             {context.map((doc) => (
-              <button
-                key={doc.id}
-                className="home__link"
-                onClick={() => onOpenDoc(doc)}
-              >
+              <button key={doc.id} className="home__link" onClick={() => onOpenDoc(doc)}>
                 {doc.title}
               </button>
             ))}
           </div>
-        </section>
-
-        {archive.length > 0 && (
-          <section className="dash__section">
-            <h2 className="dash__h2">
-              Archived
-              <span className="dash__count">{archive.length}</span>
-            </h2>
-            <ul className="home__changes">
-              {archive.slice(0, 5).map((change) => (
-                <li key={change.name}>
-                  <button
-                    className="home__change"
-                    onClick={() => onOpenChange(change.name)}
-                  >
-                    <span className="home__change-name">{change.name}</span>
-                    <span className="home__change-standing">
-                      {change.archivedOn ?? "archived"}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
         )}
       </div>
     </div>

@@ -210,6 +210,15 @@ describe("project overview", () => {
   it("lays specs out in columns that reflow", () => {
     expect(rule(".home__specs")).toContain("auto-fill");
   });
+
+  it("marks the selected count card with the accent, as elsewhere", () => {
+    expect(rule('.card[aria-pressed="true"]')).toContain("var(--accent-strong)");
+    expect(rule(".cards")).toContain("auto-fit");
+  });
+
+  it("keeps the primary action at the trailing edge", () => {
+    expect(rule(".dash__actions")).toContain("margin-left: auto");
+  });
 });
 
 describe("workflow actions", () => {

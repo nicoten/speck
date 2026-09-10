@@ -975,6 +975,65 @@ button {
   font-weight: 600;
 }
 
+/* The three counts, which are also the selector for the list below. A number
+   that leads somewhere, rather than a number for its own sake. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 10px;
+  margin: 22px 0 6px;
+}
+
+.card {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  background: var(--paper-raised);
+  text-align: left;
+}
+
+.card:hover {
+  border-color: var(--rule-strong);
+}
+
+.card__label {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.card__count {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.card__note {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+/* Selected: the accent means "this is what you are looking at", as it does
+   everywhere else in the app. */
+.card[aria-pressed="true"] {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+.card[aria-pressed="true"] .card__label,
+.card[aria-pressed="true"] .card__note {
+  color: var(--paper-raised);
+  opacity: 0.85;
+}
+
+.card[aria-pressed="true"] .card__count {
+  color: var(--paper-raised);
+}
+
 .home__changes {
   list-style: none;
   margin: 0;
@@ -1051,7 +1110,9 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 16px;
-  margin-top: 12px;
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
 }
 
 .home__link {
@@ -1089,6 +1150,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-left: auto;
 }
 
 .dash__actions .button {

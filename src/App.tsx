@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import * as ipc from "./lib/ipc";
-import {
-  findByPath,
-  findChange,
-  firstDoc,
-  neighbours,
-  type DocRef,
-} from "./lib/order";
+import { findByPath, findChange, neighbours, type DocRef } from "./lib/order";
 import type {
   Doc,
   DocContent,
@@ -469,10 +463,6 @@ export default function App() {
               onNewChange={() => {
                 setHandoff({ busy: false, error: null });
                 setRunRequest({ kind: "propose" });
-              }}
-              onStartReading={() => {
-                const first = firstDoc(tree);
-                if (first) void openDoc(first.doc);
               }}
             />
           </ViewBoundary>
