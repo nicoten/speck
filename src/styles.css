@@ -1105,28 +1105,6 @@ button {
   color: var(--ink-faint);
 }
 
-.home__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 16px;
-  margin-top: 26px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rule);
-}
-
-.home__link {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--ink-muted);
-}
-
-.home__link:hover {
-  color: var(--accent-strong);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /* -------------------------------------------------------------- dashboard */
 
 .dash {

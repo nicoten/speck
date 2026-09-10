@@ -87,8 +87,8 @@ rather than decorating.
 
 `config.yaml` used to open by default, which was an accident of it being first
 in the reading order rather than a decision — it is the least interesting file
-in an OpenSpec project. It and any other project-level document sit at the
-foot of the overview.
+in an OpenSpec project. It, and any other project-level document, is a row in
+the sidebar's **Project** section.
 
 The **Overview** row at the top of the sidebar comes back here.
 

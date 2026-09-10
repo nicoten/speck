@@ -8,18 +8,16 @@ function flatSpecs(nodes: SpecNode[]): SpecNode[] {
 }
 
 function sectionItems(tree: ProjectTree) {
-  const context: Doc[] = [];
   let active: ChangeNode[] = [];
   let archive: ChangeNode[] = [];
   let specs: SpecNode[] = [];
 
   for (const section of tree.sections) {
-    if (section.kind === "project") context.push(...section.items);
     if (section.kind === "activeChanges") active = section.items;
     if (section.kind === "archive") archive = section.items;
     if (section.kind === "specs") specs = flatSpecs(section.items);
   }
-  return { context, active, archive, specs };
+  return { active, archive, specs };
 }
 
 /** The step a change is on, which is the useful thing to say about it. */
@@ -106,7 +104,7 @@ export function ProjectDashboard({
   onOpenChange: (name: string) => void;
   onNewChange: () => void;
 }) {
-  const { context, active, archive, specs } = sectionItems(tree);
+  const { active, archive, specs } = sectionItems(tree);
   const [pane, setPane] = useState<Pane>(active.length > 0 ? "active" : "specs");
 
   const requirements = specs.reduce((n, s) => n + (s.requirementCount ?? 0), 0);
@@ -119,13 +117,6 @@ export function ProjectDashboard({
         <header className="dash__head">
           <div>
             <h1 className="dash__name">{tree.name}</h1>
-            <p className="dash__meta">
-              {/* The schema decides the order everything is read in, so it is
-                  worth one plain sentence rather than a label in the chrome. */}
-              Reads{" "}
-              {tree.schema.artifacts.map((a) => a.id).join(" → ") || "in schema order"}
-              {tree.schema.assumed && " (assumed — the schema could not be read)"}
-            </p>
           </div>
           <div className="dash__actions">
             <button className="button" onClick={onNewChange}>
@@ -221,16 +212,6 @@ export function ProjectDashboard({
               <ChangeRows changes={archive} onOpenChange={onOpenChange} dated />
             )}
           </section>
-        )}
-
-        {context.length > 0 && (
-          <div className="home__links">
-            {context.map((doc) => (
-              <button key={doc.id} className="home__link" onClick={() => onOpenDoc(doc)}>
-                {doc.title}
-              </button>
-            ))}
-          </div>
         )}
       </div>
     </div>
