@@ -77,6 +77,20 @@ chosen there rather than assumed.
 Projects are watched while open, so a document rewritten by an agent or an
 editor refreshes in place, keeping your scroll position.
 
+## The project overview
+
+Opening a project shows its overview, not a file. What is in progress and which
+step each change is on, what the project specifies today with its requirement
+count, how many documents there are and where reading starts, and what has been
+archived. `New change` is here too.
+
+`config.yaml` used to open by default, which was an accident of it being first
+in the reading order rather than a decision — it is the least interesting file
+in an OpenSpec project. It is still one click away under **Read it through**,
+along with any other project-level document.
+
+The **Overview** row at the top of the sidebar comes back here.
+
 ## A change's dashboard
 
 Clicking a change's **name** opens its dashboard; the **caret** to its left

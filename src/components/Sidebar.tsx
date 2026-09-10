@@ -23,6 +23,9 @@ interface Props {
 
 interface SidebarProps extends Props {
   onNewChange: () => void;
+  onOpenHome: () => void;
+  /** True when the project overview is showing. */
+  atHome: boolean;
 }
 
 /** What a row inside the tree needs: nothing about changes or sections. */
@@ -253,9 +256,15 @@ export function Sidebar({
   onNewChange,
   openChange,
   onOpenChange,
+  onOpenHome,
+  atHome,
 }: SidebarProps) {
   return (
     <nav className="sidebar" aria-label="Project documents">
+      <button className="row row--home" onClick={onOpenHome} aria-current={atHome}>
+        <span className="row__label">Overview</span>
+      </button>
+
       {tree.sections.map((section) => (
         <div className="section" key={section.kind}>
           <div className="section__head">

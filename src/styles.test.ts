@@ -202,6 +202,16 @@ describe("task checkboxes", () => {
   });
 });
 
+describe("project overview", () => {
+  it("makes the overview row reachable and markable", () => {
+    expect(rule(".row--home")).toContain("font-weight: 600");
+  });
+
+  it("lays specs out in columns that reflow", () => {
+    expect(rule(".home__specs")).toContain("auto-fill");
+  });
+});
+
 describe("workflow actions", () => {
   it("keeps the three workflow buttons on one row", () => {
     expect(rule(".dash__actions")).toContain("display: flex");

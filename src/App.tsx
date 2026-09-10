@@ -15,6 +15,7 @@ import type {
   ProjectTree,
   Section,
 } from "./lib/types";
+import { ProjectDashboard } from "./components/ProjectDashboard";
 import { ProjectSwitcher } from "./components/ProjectSwitcher";
 import { Reader } from "./components/Reader";
 import { ReadingRail } from "./components/ReadingRail";
@@ -125,6 +126,14 @@ export default function App() {
     [],
   );
 
+  /** The project overview: no document and no change selected. */
+  const showHome = useCallback(() => {
+    setOpenPath(null);
+    setOpenChange(null);
+    setContent(null);
+    setDocError(null);
+  }, []);
+
   const showChange = useCallback(
     (section: Section["kind"], name: string) => {
       setOpenPath(null);
@@ -150,16 +159,12 @@ export default function App() {
           .catch(() => setRepo(null));
 
         // Keep reading the same document across a refresh when it survived.
-        const stay = keepDoc && openPathRef.current
-          ? findByPath(next, openPathRef.current)
-          : undefined;
-        const target = stay ?? (keepDoc ? undefined : firstDoc(next));
-        if (target) await openDoc(target.doc);
-        else if (!stay && keepDoc) {
-          // The open document went away; fall back to the start.
-          const first = firstDoc(next);
-          if (first) await openDoc(first.doc);
-          else {
+        if (keepDoc) {
+          // A refresh keeps you where you were, unless the document has gone.
+          const stay = openPathRef.current
+            ? findByPath(next, openPathRef.current)
+            : undefined;
+          if (openPathRef.current && !stay) {
             setOpenPath(null);
             setContent(null);
           }
@@ -429,6 +434,8 @@ export default function App() {
             setHandoff({ busy: false, error: null });
             setRunRequest({ kind: "propose" });
           }}
+          onOpenHome={showHome}
+          atHome={!openPath && !openChange}
           openChange={dashboard ? openChange!.name : null}
           onOpenChange={(name) => {
             const section = tree.sections.find(
@@ -446,7 +453,30 @@ export default function App() {
           aria-orientation="vertical"
           onMouseDown={() => setDragging(true)}
         />
-        {dashboard ? (
+        {!openPath && !openChange ? (
+          <ViewBoundary key="home" what="project">
+            <ProjectDashboard
+              tree={tree}
+              onOpenDoc={(doc) => void openDoc(doc)}
+              onOpenChange={(name) => {
+                const section = tree.sections.find(
+                  (sec) =>
+                    (sec.kind === "activeChanges" || sec.kind === "archive") &&
+                    sec.items.some((c) => c.name === name),
+                );
+                if (section) showChange(section.kind, name);
+              }}
+              onNewChange={() => {
+                setHandoff({ busy: false, error: null });
+                setRunRequest({ kind: "propose" });
+              }}
+              onStartReading={() => {
+                const first = firstDoc(tree);
+                if (first) void openDoc(first.doc);
+              }}
+            />
+          </ViewBoundary>
+        ) : dashboard ? (
           <ViewBoundary key={dashboard.name} what="change">
           <ChangeDashboard
             change={dashboard}
