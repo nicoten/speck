@@ -1,6 +1,7 @@
 //! The IPC surface. Deliberately small: the webview loads a project, reads a
 //! document, and manages the library. Nothing here writes to a project.
 
+use crate::agent::session::{Authority, RunningSession, Sessions};
 use crate::agent::{self, AgentAction};
 use crate::library::{Library, ProjectEntry};
 use crate::openspec::{self, DocContent, ProjectTree};
@@ -19,6 +20,7 @@ pub struct AppState {
     pub library: Library,
     pub allowed: Allowed,
     pub watch: WatchState,
+    pub sessions: std::sync::Arc<Sessions>,
 }
 
 impl AppState {
@@ -27,6 +29,7 @@ impl AppState {
             library: Library::new(config_dir),
             allowed: Allowed::default(),
             watch: WatchState::default(),
+            sessions: std::sync::Arc::new(Sessions::default()),
         }
     }
 }
@@ -135,16 +138,30 @@ pub fn cli_info() -> Option<String> {
     openspec::cli::version()
 }
 
-/// Hand an OpenSpec workflow to a Claude session in the user's terminal.
+/// Where the work should happen.
+#[derive(Debug, Clone, Copy, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Venue {
+    /// A session inside Speck, streaming its activity to the panel.
+    InApp { authority: Authority },
+    /// A session in the user's terminal, which Speck does not watch.
+    Terminal,
+}
+
+/// Start an OpenSpec workflow for a project that is open.
 ///
-/// The project must be one that is open, so this cannot be pointed at an
-/// arbitrary directory, and the action is structured rather than a command line.
+/// The project must be one Speck has loaded, so this cannot be pointed at an
+/// arbitrary directory, and the action is structured rather than a command
+/// line. `InApp` gives the agent authority over the project — that is the
+/// point of it, and the panel says so while it runs.
 #[tauri::command]
 pub fn start_agent_session(
+    app: AppHandle,
     state: State<'_, AppState>,
     path: String,
     action: AgentAction,
-) -> CmdResult<String> {
+    venue: Venue,
+) -> CmdResult<Option<RunningSession>> {
     let root = PathBuf::from(&path)
         .canonicalize()
         .map_err(|e| format!("{path}: {e}"))?;
@@ -152,7 +169,30 @@ pub fn start_agent_session(
     if !state.allowed.0.lock().unwrap().contains(&root) {
         return Err(format!("{} is not an open project", root.display()));
     }
-    agent::start(&root, &action).map_err(to_string_err)
+
+    match venue {
+        Venue::Terminal => {
+            agent::start(&root, &action).map_err(to_string_err)?;
+            Ok(None)
+        }
+        Venue::InApp { authority } => {
+            let sessions = std::sync::Arc::clone(&state.sessions);
+            agent::session::start(app, sessions, &root, &action, authority)
+                .map(Some)
+                .map_err(to_string_err)
+        }
+    }
+}
+
+#[tauri::command]
+pub fn stop_agent_session(state: State<'_, AppState>, id: String) -> CmdResult<()> {
+    state.sessions.stop(&id).map_err(to_string_err)
+}
+
+/// Sessions still in flight, so the UI can rebuild its state after a reload.
+#[tauri::command]
+pub fn running_sessions(state: State<'_, AppState>) -> Vec<RunningSession> {
+    state.sessions.running()
 }
 
 pub fn init_state(app: &AppHandle) -> AppState {

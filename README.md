@@ -44,39 +44,68 @@ The CLI is looked up on `PATH`, then through a login shell, then in the usual
 install locations — a macOS app launched from Finder does not inherit your
 shell's `PATH`, so version-manager shims are invisible without that.
 
-## Speck never edits your project
+## What Speck does and does not touch
 
-There is no filesystem write capability in `tauri.conf.json`, and document reads
-go through the app's own commands, which refuse any path outside an open
-project. Nothing Speck does changes a file under `openspec/`.
+Speck itself never writes to a project. There is no filesystem write capability
+in `tauri.conf.json`, and document reads go through the app's own commands,
+which refuse any path outside an open project.
+
+**It can, however, start a Claude session that edits your repository.** That is
+what `Apply` is for, and it is a deliberate change in what this app is. Nothing
+starts without a confirmation that says so, and the authority the run gets is
+chosen there rather than assumed.
 
 Projects are watched while open, so a document rewritten by an agent or an
 editor refreshes in place, keeping your scroll position.
 
-## Handing work to Claude
+## Running OpenSpec workflows
 
 `Apply` on a change, and `+` beside **Active changes**, run OpenSpec's agent
 workflows: `/opsx:apply <change>` and `/opsx:propose <idea>`. Neither is a plain
 CLI command — `openspec instructions apply --json` produces a brief, and an
 agent carries it out.
 
-So Speck hands off rather than driving. It writes a short script to the OS temp
-directory and asks the system to open it, starting a Claude session in your
-terminal at the project root. The work happens where you can watch it and
-approve each edit, and Speck's own guarantee is untouched. Progress comes back
-on its own: the agent ticks boxes in `tasks.md`, the watcher notices, and
-`Tasks 3/14` climbs in the sidebar while you read.
+The session runs inside Speck and streams what it is doing into a panel above
+the reading rail: the files it reads and edits, the commands it runs, what it
+says, and how it ended. You can stop it at any point, which kills the process
+mid-task — the panel says so rather than pretending the run completed.
 
-Two things keep the handoff narrow:
+Progress also arrives by itself, and that is the more reliable signal: the agent
+ticks boxes in `tasks.md`, the watcher notices, and `Tasks 3/14` climbs in the
+sidebar while you read.
 
-- The webview asks for a **structured action** — apply a named change, or
-  propose an idea — never a command line. It cannot ask Speck to run something
-  else, and a change name is validated as a directory name rather than trusted.
-- The prompt reaches the session **through a file** rather than interpolated
-  into a command, so an idea containing `$(...)` or backticks arrives as text.
+### Authority
+
+The confirmation offers two levels, described by what they do rather than the
+flags they map to:
+
+| Choice | Permission mode | Effect |
+| --- | --- | --- |
+| Edits only (default) | `acceptEdits` | Files are edited without asking. Commands are refused, and the refusals are listed when the run ends. |
+| Edits and commands | `bypassPermissions` | Nothing is asked and nothing refused. Needed when a change's tasks build or test. |
+
+Refusals are reported rather than swallowed, because a denied `Bash` call is
+usually why an apply stalled halfway.
 
 `propose` is planning-only by OpenSpec's own rules: it writes the proposal,
 specs, design and tasks, then stops. `apply` is the one that implements code.
+
+One session per project at a time — two agents editing one repository would each
+be working from a tree the other is changing underneath it.
+
+### Running in a terminal instead
+
+The same confirmation offers a terminal handoff: Speck writes a short script to
+the OS temp directory and asks the system to open it, starting the session in
+your own terminal at the project root. Approvals then happen in the Claude Code
+UI, and Speck does not watch a session it does not run.
+
+Two things keep either path narrow. The webview asks for a **structured
+action** — apply a named change, or propose an idea — never a command line, and
+a change name is validated as a directory name rather than trusted. For the
+terminal path the prompt reaches the session **through a file** rather than
+interpolated into a command, so an idea containing `$(...)` or backticks arrives
+as text.
 
 ## Installing
 

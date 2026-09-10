@@ -143,7 +143,24 @@ describe("agent handoff", () => {
     expect(rule(".changebar__apply")).toContain("flex: none");
   });
 
-  it("gives the new-change sheet a focus ring and a readable field", () => {
+  it("distinguishes a live session from a finished or failed one", () => {
+    expect(rule(".agent__dot--live")).toContain("var(--op-added)");
+    expect(rule('.agent[data-status="failed"] .agent__dot')).toContain("var(--op-removed)");
+  });
+
+  it("keeps the session log above the reading rail, not over the document", () => {
+    const agent = rule(".agent");
+    expect(agent).toContain("border-top");
+    expect(agent).toContain("max-height");
+    expect(rule(".agent__log")).toContain("overflow-y: auto");
+  });
+
+  it("marks refusals distinctly from failures", () => {
+    expect(rule(".agent__denials")).toContain("var(--op-modified)");
+    expect(rule(".agent__failure")).toContain("var(--op-removed)");
+  });
+
+  it("gives the run sheet a focus ring and a readable field", () => {
     expect(rule(".sheet__field:focus-visible")).toContain("var(--accent)");
     expect(rule(".sheet__panel")).toContain("var(--paper)");
   });

@@ -26,6 +26,8 @@ pub fn run() {
             commands::library_remove,
             commands::cli_info,
             commands::start_agent_session,
+            commands::stop_agent_session,
+            commands::running_sessions,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

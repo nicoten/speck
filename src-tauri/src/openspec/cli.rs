@@ -12,15 +12,31 @@ use std::process::Command;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-/// How to invoke `openspec`: the binary, plus the `PATH` its child process
-/// needs. Resolved once.
-static RESOLVED: OnceLock<Option<Resolved>> = OnceLock::new();
+/// How to invoke a tool: the binary, plus the `PATH` its child process needs.
+/// Resolved once per tool.
+static OPENSPEC: OnceLock<Option<Resolved>> = OnceLock::new();
+static CLAUDE: OnceLock<Option<Resolved>> = OnceLock::new();
 
 #[derive(Debug, Clone)]
 pub struct Resolved {
     bin: PathBuf,
     /// `PATH` to hand the child process, when the inherited one is not enough.
     path_env: Option<String>,
+}
+
+impl Resolved {
+    /// A command for this tool, carrying the `PATH` it needs.
+    pub fn command(&self) -> Command {
+        let mut cmd = Command::new(&self.bin);
+        if let Some(path) = &self.path_env {
+            cmd.env("PATH", path);
+        }
+        cmd
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.bin
+    }
 }
 
 /// Markers so the shell probe's output can be parsed even when an interactive
@@ -48,41 +64,48 @@ const SHELL_TIMEOUT: Duration = Duration::from_secs(5);
 /// So we ask the shell for both the binary and its `PATH`, and carry that `PATH`
 /// into every call.
 pub fn resolved() -> Option<&'static Resolved> {
-    RESOLVED
-        .get_or_init(|| {
-            // Already on PATH (the usual case when launched from a terminal).
-            let inherited = Resolved {
-                bin: PathBuf::from("openspec"),
-                path_env: None,
-            };
-            if probe(&inherited) {
-                return Some(inherited);
-            }
+    OPENSPEC.get_or_init(|| resolve("openspec")).as_ref()
+}
 
-            // Ask the user's shell where it is, and what PATH it uses.
-            let (shell_path, shell_bin) = shell_probe();
+/// The `claude` binary, for handing work to a session.
+pub fn claude() -> Option<&'static Resolved> {
+    CLAUDE.get_or_init(|| resolve("claude")).as_ref()
+}
 
-            if let Some(bin) = shell_bin {
-                let candidate = Resolved {
-                    bin,
-                    path_env: shell_path.clone(),
-                };
-                if probe(&candidate) {
-                    return Some(candidate);
-                }
-            }
+/// Locate a tool the same way for every tool: PATH as inherited, then the
+/// user's interactive login shell, then the usual install locations.
+fn resolve(name: &str) -> Option<Resolved> {
+    // Already on PATH (the usual case when launched from a terminal).
+    let inherited = Resolved {
+        bin: PathBuf::from(name),
+        path_env: None,
+    };
+    if probe(&inherited) {
+        return Some(inherited);
+    }
 
-            // Last resort: the usual install locations, tried with the shell's
-            // PATH when we managed to read it.
-            well_known_paths().into_iter().find_map(|bin| {
-                let candidate = Resolved {
-                    bin,
-                    path_env: shell_path.clone(),
-                };
-                probe(&candidate).then_some(candidate)
-            })
-        })
-        .as_ref()
+    // Ask the user's shell where it is, and what PATH it uses.
+    let (shell_path, shell_bin) = shell_probe(name);
+
+    if let Some(bin) = shell_bin {
+        let candidate = Resolved {
+            bin,
+            path_env: shell_path.clone(),
+        };
+        if probe(&candidate) {
+            return Some(candidate);
+        }
+    }
+
+    // Last resort: the usual install locations, tried with the shell's PATH
+    // when we managed to read it.
+    well_known_paths(name).into_iter().find_map(|bin| {
+        let candidate = Resolved {
+            bin,
+            path_env: shell_path.clone(),
+        };
+        probe(&candidate).then_some(candidate)
+    })
 }
 
 /// The resolved binary path, for display.
@@ -90,17 +113,9 @@ pub fn binary() -> Option<&'static PathBuf> {
     resolved().map(|r| &r.bin)
 }
 
-fn command(r: &Resolved) -> Command {
-    let mut cmd = Command::new(&r.bin);
-    if let Some(path) = &r.path_env {
-        cmd.env("PATH", path);
-    }
-    cmd
-}
-
 /// Does this candidate answer `--version`?
 fn probe(r: &Resolved) -> bool {
-    command(r)
+    r.command()
         .arg("--version")
         .output()
         .map(|o| o.status.success())
@@ -129,10 +144,10 @@ fn parse_shell_probe(stdout: &str) -> (Option<String>, Option<PathBuf>) {
 
 /// Ask the user's login shell, interactively, for its `PATH` and the location
 /// of `openspec`.
-fn shell_probe() -> (Option<String>, Option<PathBuf>) {
+fn shell_probe(name: &str) -> (Option<String>, Option<PathBuf>) {
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string());
     let script = format!(
-        "printf '{PATH_MARKER}%s\\n{BIN_MARKER}%s\\n' \"$PATH\" \"$(command -v openspec 2>/dev/null)\""
+        "printf '{PATH_MARKER}%s\\n{BIN_MARKER}%s\\n' \"$PATH\" \"$(command -v {name} 2>/dev/null)\""
     );
 
     // An interactive shell runs the user's rc files, which could block; do not
@@ -153,16 +168,15 @@ fn shell_probe() -> (Option<String>, Option<PathBuf>) {
     }
 }
 
-fn well_known_paths() -> Vec<PathBuf> {
+fn well_known_paths(name: &str) -> Vec<PathBuf> {
     let mut out = vec![
-        PathBuf::from("/opt/homebrew/bin/openspec"),
-        PathBuf::from("/usr/local/bin/openspec"),
+        PathBuf::from(format!("/opt/homebrew/bin/{name}")),
+        PathBuf::from(format!("/usr/local/bin/{name}")),
     ];
     if let Some(home) = dirs_home() {
-        out.push(home.join(".asdf/shims/openspec"));
-        out.push(home.join(".local/bin/openspec"));
-        out.push(home.join(".bun/bin/openspec"));
-        out.push(home.join(".volta/bin/openspec"));
+        for dir in [".asdf/shims", ".local/bin", ".bun/bin", ".volta/bin"] {
+            out.push(home.join(dir).join(name));
+        }
     }
     out
 }
@@ -178,7 +192,8 @@ fn dirs_home() -> Option<PathBuf> {
 /// root from there, which is exactly the behaviour we want per project.
 pub fn json<T: for<'de> Deserialize<'de>>(cwd: &Path, args: &[&str]) -> Result<T> {
     let r = resolved().ok_or_else(|| anyhow!("openspec CLI not found"))?;
-    let out = command(r)
+    let out = r
+        .command()
         .args(args)
         .arg("--no-color")
         .current_dir(cwd)
@@ -204,7 +219,7 @@ pub fn json<T: for<'de> Deserialize<'de>>(cwd: &Path, args: &[&str]) -> Result<T
 }
 
 pub fn version() -> Option<String> {
-    let out = command(resolved()?).arg("--version").output().ok()?;
+    let out = resolved()?.command().arg("--version").output().ok()?;
     Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
 

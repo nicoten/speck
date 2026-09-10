@@ -7,9 +7,17 @@ import { ProjectSwitcher } from "./components/ProjectSwitcher";
 import { Reader } from "./components/Reader";
 import { ReadingRail } from "./components/ReadingRail";
 import { Sidebar } from "./components/Sidebar";
-import { NewChangeForm } from "./components/NewChangeForm";
+import { AgentPanel } from "./components/AgentPanel";
+import { ConfirmRun, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
+import {
+  runningFor,
+  startSession,
+  stopSession,
+  useAgentSessions,
+  type Authority,
+} from "./lib/agent";
 import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updates";
 
 const RAIL_WIDTH = "speck:rail-width";
@@ -27,11 +35,12 @@ export default function App() {
     Number(localStorage.getItem(RAIL_WIDTH)) || 268,
   );
   const [update, setUpdate] = useState<UpdateState>({ status: "idle" });
-  const [newChangeOpen, setNewChangeOpen] = useState(false);
+  const [runRequest, setRunRequest] = useState<RunRequest | null>(null);
   const [handoff, setHandoff] = useState<{ busy: boolean; error: string | null }>({
     busy: false,
     error: null,
   });
+  const { sessions, add: addSession, dismiss: dismissSession } = useAgentSessions();
 
   const openPathRef = useRef<string | null>(null);
   openPathRef.current = openPath;
@@ -182,15 +191,25 @@ export default function App() {
 
   // ------------------------------------------------------- agent handoff
 
-  // Speck does not do the work: OpenSpec's apply and propose are agent
-  // workflows, so both open a Claude session in the terminal, where you can see
-  // what it does and approve it. Progress arrives back through the watcher.
-  const startSession = useCallback(
-    async (action: ipc.AgentAction): Promise<boolean> => {
+  // Apply and propose are agent workflows, not CLI commands, so both start a
+  // Claude session. In-app runs stream their activity to the panel; the
+  // terminal option hands off to a session Speck does not watch. Either way the
+  // agent's real progress arrives through the watcher, as ticked tasks.
+  const beginRun = useCallback(
+    async (opts: {
+      action: ipc.AgentAction;
+      authority: Authority;
+      terminal: boolean;
+    }): Promise<boolean> => {
       if (!tree) return false;
       setHandoff({ busy: true, error: null });
       try {
-        await ipc.startAgentSession(tree.root, action);
+        const started = await startSession(
+          tree.root,
+          opts.action,
+          opts.terminal ? "terminal" : { inApp: { authority: opts.authority } },
+        );
+        if (started) addSession(started);
         setHandoff({ busy: false, error: null });
         return true;
       } catch (e) {
@@ -198,20 +217,25 @@ export default function App() {
         return false;
       }
     },
-    [tree],
+    [tree, addSession],
   );
 
-  const applyChange = useCallback(
-    (change: string) => void startSession({ kind: "apply", change }),
-    [startSession],
-  );
-
-  const proposeChange = useCallback(
-    async (idea: string) => {
-      if (await startSession({ kind: "propose", idea })) setNewChangeOpen(false);
+  const confirmRun = useCallback(
+    async (opts: { idea?: string; authority: Authority; terminal: boolean }) => {
+      if (!runRequest) return;
+      const action: ipc.AgentAction =
+        runRequest.change !== undefined
+          ? { kind: "apply", change: runRequest.change }
+          : { kind: "propose", idea: opts.idea ?? "" };
+      if (await beginRun({ action, authority: opts.authority, terminal: opts.terminal })) {
+        setRunRequest(null);
+      }
     },
-    [startSession],
+    [runRequest, beginRun],
   );
+
+  const activeSession = tree ? runningFor(sessions, tree.root) : undefined;
+  const panelSession = activeSession ?? sessions.find((s) => s.root === tree?.root);
 
   // ---------------------------------------------------------- navigation
 
@@ -315,7 +339,7 @@ export default function App() {
           onToggle={toggle}
           onNewChange={() => {
             setHandoff({ busy: false, error: null });
-            setNewChangeOpen(true);
+            setRunRequest({});
           }}
         />
         <div
@@ -331,15 +355,27 @@ export default function App() {
           content={content}
           error={docError ?? handoff.error ?? error}
           onOpen={(doc) => void openDoc(doc)}
-          onApply={applyChange}
-          applying={handoff.busy}
+          onApply={(change) => {
+            setHandoff({ busy: false, error: null });
+            setRunRequest({ change });
+          }}
+          applying={activeSession !== undefined}
         />
       </div>
 
-      {newChangeOpen && (
-        <NewChangeForm
-          onStart={(idea) => void proposeChange(idea)}
-          onCancel={() => setNewChangeOpen(false)}
+      {panelSession && (
+        <AgentPanel
+          session={panelSession}
+          onStop={() => void stopSession(panelSession.id).catch(() => {})}
+          onDismiss={() => dismissSession(panelSession.id)}
+        />
+      )}
+
+      {runRequest && (
+        <ConfirmRun
+          request={runRequest}
+          onStart={(opts) => void confirmRun(opts)}
+          onCancel={() => setRunRequest(null)}
           error={handoff.error}
           busy={handoff.busy}
         />

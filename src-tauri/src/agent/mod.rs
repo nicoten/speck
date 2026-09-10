@@ -10,6 +10,9 @@
 //! The webview asks for an [`AgentAction`], never a command line: it can name a
 //! change or describe an idea, and nothing else.
 
+pub mod event;
+pub mod session;
+
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -43,6 +46,14 @@ impl AgentAction {
                 }
                 Ok(format!("/opsx:propose {idea}"))
             }
+        }
+    }
+
+    /// How the UI names this run.
+    pub fn label(&self) -> String {
+        match self {
+            AgentAction::Apply { change } => format!("Applying {change}"),
+            AgentAction::Propose { .. } => "Planning a change".to_string(),
         }
     }
 
