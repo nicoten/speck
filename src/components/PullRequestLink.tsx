@@ -64,9 +64,16 @@ export function PullRequestLink({
     );
   }
 
+  // Tolerate a payload without the array rather than throwing: the reason this
+  // is defensive is that it was not, and the whole dashboard went down.
+  const pullRequests = lookup.pullRequests ?? [];
+  if (pullRequests.length === 0) {
+    return <p className="prs prs--quiet">No pull requests found</p>;
+  }
+
   return (
     <div className="prs">
-      {lookup.pullRequests.map((pr) => {
+      {pullRequests.map((pr) => {
         const { text, tone } = stateOf(pr);
         return (
           <button

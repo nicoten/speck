@@ -13,7 +13,7 @@ use serde_json::Value;
 use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase", tag = "kind")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum AgentEvent {
     /// The session exists and has told us how it is configured.
     Started {
@@ -210,6 +210,39 @@ mod tests {
         assert!(events
             .iter()
             .any(|e| matches!(e, AgentEvent::Message { text } if text == "hello from speck")));
+    }
+
+    /// The front end reads these keys by name. On an enum, `rename_all` renames
+    /// the variants and leaves the fields alone — the opposite of a struct — so
+    /// the wire shape is asserted rather than assumed.
+    #[test]
+    fn sends_camel_case_keys_to_the_front_end() {
+        let started = serde_json::to_value(AgentEvent::Started {
+            session_id: "s1".into(),
+            model: Some("m".into()),
+            permission_mode: Some("acceptEdits".into()),
+        })
+        .unwrap();
+        assert_eq!(started["kind"], "started");
+        assert_eq!(started["sessionId"], "s1");
+        assert_eq!(started["permissionMode"], "acceptEdits");
+        assert!(started.get("session_id").is_none(), "snake_case leaked");
+
+        let finished = serde_json::to_value(AgentEvent::Finished {
+            ok: true,
+            turns: Some(3),
+            duration_ms: Some(1200),
+            cost_usd: Some(0.5),
+            denials: vec!["Bash".into()],
+            error: None,
+        })
+        .unwrap();
+        assert_eq!(finished["kind"], "finished");
+        assert_eq!(finished["durationMs"], 1200);
+        assert_eq!(finished["costUsd"], 0.5);
+        for absent in ["duration_ms", "cost_usd"] {
+            assert!(finished.get(absent).is_none(), "{absent} leaked");
+        }
     }
 
     #[test]

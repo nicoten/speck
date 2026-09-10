@@ -22,6 +22,7 @@ import { Sidebar } from "./components/Sidebar";
 import { AgentPanel } from "./components/AgentPanel";
 import { ChangeDashboard } from "./components/ChangeDashboard";
 import { GitHubMark } from "./components/GitHubMark";
+import { ViewBoundary } from "./components/ViewBoundary";
 import { ConfirmRun, type RunKind, type RunRequest } from "./components/ConfirmRun";
 import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
@@ -446,6 +447,7 @@ export default function App() {
           onMouseDown={() => setDragging(true)}
         />
         {dashboard ? (
+          <ViewBoundary key={dashboard.name} what="change">
           <ChangeDashboard
             change={dashboard}
             section={openChange!.section}
@@ -459,6 +461,7 @@ export default function App() {
             refreshKey={treeVersion}
             root={tree.root}
           />
+          </ViewBoundary>
         ) : (
           <Reader
             ref_={currentRef}

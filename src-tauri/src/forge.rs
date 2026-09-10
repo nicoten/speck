@@ -107,7 +107,7 @@ pub enum Basis {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase", tag = "status")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "status")]
 pub enum PullRequestLookup {
     Found {
         pull_requests: Vec<PullRequest>,
@@ -419,6 +419,36 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         // No remote at all: nothing is openable.
         assert!(open_url(dir.path(), "https://github.com/o/r/pull/1").is_err());
+    }
+
+    /// The dashboard reads `pullRequests`. This is the bug that broke it: on an
+    /// enum `rename_all` renames variants, not fields.
+    #[test]
+    fn sends_camel_case_keys_to_the_front_end() {
+        let found = serde_json::to_value(PullRequestLookup::Found {
+            pull_requests: vec![PullRequest {
+                number: 43,
+                title: "Report toolbar".into(),
+                state: "OPEN".into(),
+                url: "https://github.com/o/r/pull/43".into(),
+                is_draft: false,
+            }],
+            basis: Basis::Branch,
+        })
+        .unwrap();
+
+        assert_eq!(found["status"], "found");
+        assert_eq!(found["basis"], "branch");
+        assert!(found["pullRequests"].is_array(), "got {found}");
+        assert!(found.get("pull_requests").is_none(), "snake_case leaked");
+        assert_eq!(found["pullRequests"][0]["isDraft"], false);
+
+        let none = serde_json::to_value(PullRequestLookup::None {
+            branch: "report-toolbar".into(),
+        })
+        .unwrap();
+        assert_eq!(none["status"], "none");
+        assert_eq!(none["branch"], "report-toolbar");
     }
 
     #[test]
