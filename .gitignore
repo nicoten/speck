@@ -30,3 +30,7 @@ dist-ssr
 
 # Built release artifacts
 dist-release/
+.gstack/
+
+# Wrangler's local dev state for the website
+site/.wrangler/

@@ -1,0 +1,529 @@
+/* Speck — speck.nicotejera.com
+ *
+ * The palette and the typographic split are the app's, which took them from
+ * openspec.dev: warm paper, soft ink, terracotta on the rail. Plex Mono carries
+ * the structure, the native sans carries the prose. */
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2");
+}
+
+:root {
+  --paper: #f2efe3;
+  --paper-raised: #f7f5ec;
+  --paper-sunk: #eae6d7;
+  --ink: #33322f;
+  --ink-muted: #6f6a5c;
+  --ink-faint: #918b7b;
+  --rule: rgba(40, 36, 28, 0.14);
+  --rule-strong: rgba(40, 36, 28, 0.24);
+  --shadow: rgba(40, 36, 28, 0.1);
+
+  --accent: #c96f4b;
+  --accent-strong: #a64f2c;
+  --accent-border: #d9b8ab;
+  --on-accent: #f7f5ec;
+
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, system-ui,
+    sans-serif;
+
+  --measure: 64ch;
+  --gutter: 3.25rem;
+  --shell: 42rem;
+  --shell-wide: 68rem;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0a0908;
+    --paper-raised: #12100b;
+    --paper-sunk: #060504;
+    --ink: #ece6d6;
+    --ink-muted: #a89f8c;
+    --ink-faint: #7d7566;
+    --rule: rgba(236, 230, 214, 0.09);
+    --rule-strong: rgba(236, 230, 214, 0.18);
+    --shadow: rgba(0, 0, 0, 0.5);
+
+    --accent: #c96f4b;
+    --accent-strong: #d89074;
+    --accent-border: #713c27;
+    --on-accent: #17110d;
+
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+code,
+kbd {
+  font-family: var(--mono);
+  font-size: 0.9em;
+}
+
+kbd {
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  padding: 0.05em 0.35em;
+  white-space: nowrap;
+}
+
+strong {
+  font-weight: 600;
+}
+
+a {
+  color: var(--accent-strong);
+  text-decoration-color: var(--accent-border);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 2;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+/* ---- shells ------------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding-inline: 1.5rem;
+}
+
+.shell--wide {
+  max-width: var(--shell-wide);
+}
+
+/* ---- masthead ----------------------------------------------------------- */
+
+.masthead {
+  padding-block: 1.5rem;
+}
+
+.masthead__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+}
+
+.wordmark img {
+  border-radius: 7px;
+}
+
+.wordmark--link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.wordmark--small {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.wordmark--small img {
+  border-radius: 5px;
+}
+
+.masthead__repo {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  text-decoration-color: var(--rule-strong);
+}
+
+.masthead__repo:hover {
+  color: var(--ink);
+}
+
+/* ---- hero --------------------------------------------------------------- */
+
+.hero {
+  padding-block: 3.5rem 0;
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: clamp(2.05rem, 6vw, 3.1rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.hero__lede {
+  margin: 1.5rem 0 0;
+  max-width: 54ch;
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.25rem;
+  margin: 2.25rem 0 0;
+}
+
+.button {
+  display: inline-block;
+  flex: none;
+  background: var(--accent-strong);
+  color: var(--on-accent);
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: -0.005em;
+  padding: 0.7rem 1.15rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 120ms ease-out;
+}
+
+.button:hover {
+  background: var(--accent);
+}
+
+.download__note {
+  flex: 1 1 18ch;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+/* ---- screenshots -------------------------------------------------------- */
+
+.shot {
+  margin: 0;
+}
+
+.shot--hero {
+  margin-top: 3.25rem;
+  padding-left: max(1.5rem, calc((100% - var(--shell)) / 2 + 1.5rem));
+  padding-right: 1.5rem;
+}
+
+.shot--hero .shot__frame {
+  max-width: 64rem;
+}
+
+.shot__frame {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper-raised);
+  box-shadow: 0 1px 1px var(--shadow), 0 12px 28px -18px var(--shadow);
+  line-height: 0;
+}
+
+/* ---- the loop, and its rail --------------------------------------------- */
+
+.loop {
+  padding-block: 4.5rem 1rem;
+}
+
+.station {
+  position: relative;
+  padding-left: var(--gutter);
+  padding-bottom: 3.25rem;
+}
+
+/* The line, drawn per station so it is continuous without anyone measuring it. */
+.station::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent-border);
+}
+
+/* The mark, sitting on the line with a ring of paper so the line runs behind it. */
+.station::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0.58rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--paper);
+}
+
+.station:first-of-type::before {
+  top: 1.02rem;
+}
+
+.station:last-of-type {
+  padding-bottom: 0;
+}
+
+.station h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.station p {
+  margin: 1rem 0 0;
+  max-width: var(--measure);
+}
+
+.station .shot {
+  margin-top: 1.75rem;
+}
+
+.rail-return {
+  position: relative;
+  left: -0.5px;
+  margin-left: 0;
+  display: block;
+  width: 116px;
+  height: 72px;
+  color: var(--accent-border);
+}
+
+.rail-return path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+@media (min-width: 48rem) {
+  .station {
+    padding-left: 0;
+  }
+
+  .station::before {
+    left: calc(-1 * var(--gutter));
+  }
+
+  .station::after {
+    left: calc(-1 * var(--gutter) - 4px);
+  }
+
+  .rail-return {
+    margin-left: calc(-1 * var(--gutter));
+  }
+}
+
+/* ---- what it writes ----------------------------------------------------- */
+
+.restraint {
+  margin-top: 3rem;
+  padding-block: 3.75rem;
+  background: var(--paper-sunk);
+  border-block: 1px solid var(--rule);
+}
+
+.restraint h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.restraint p {
+  margin: 1.15rem 0 0;
+  max-width: var(--measure);
+}
+
+/* ---- close -------------------------------------------------------------- */
+
+.close {
+  padding-block: 4rem 3rem;
+}
+
+.close h2 {
+  margin: 0;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+}
+
+.close .download {
+  margin-top: 1.5rem;
+}
+
+.close__needs {
+  margin: 2rem 0 0;
+  max-width: var(--measure);
+  font-size: 0.9375rem;
+  color: var(--ink-muted);
+}
+
+/* ---- footer ------------------------------------------------------------- */
+
+.footer {
+  border-top: 1px solid var(--rule);
+  padding-block: 1.75rem 2.5rem;
+}
+
+.footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+
+.footer__links a {
+  color: var(--ink-muted);
+  text-decoration-color: var(--rule-strong);
+}
+
+.footer__links a:hover {
+  color: var(--ink);
+}
+
+/* ---- narrow ------------------------------------------------------------- */
+
+@media (max-width: 34rem) {
+  :root {
+    --gutter: 1.75rem;
+  }
+
+  body {
+    font-size: 1rem;
+  }
+
+  .shell {
+    padding-inline: 1.25rem;
+  }
+
+  .hero {
+    padding-block: 2.25rem 0;
+  }
+
+  .hero__lede {
+    font-size: 1.0625rem;
+  }
+
+  .shot--hero {
+    margin-top: 2.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .loop {
+    padding-block: 3.25rem 1rem;
+  }
+
+  .station h2,
+  .restraint h2,
+  .close h2 {
+    font-size: 1.25rem;
+  }
+
+  .station::after {
+    top: 0.5rem;
+  }
+
+  .station:first-of-type::before {
+    top: 0.94rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

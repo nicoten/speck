@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speck — run OpenSpec end to end</title>
+<meta name="description" content="A macOS app for OpenSpec projects. Start a change, read its proposal and specs in workflow order, then apply, verify and archive it without leaving the window.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f2efe3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0908" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Speck — run OpenSpec end to end">
+<meta property="og:description" content="A macOS app for OpenSpec projects. Start a change, read its proposal and specs in workflow order, then apply, verify and archive it without leaving the window.">
+<meta property="og:url" content="https://speck.nicotejera.com/">
+<meta property="og:image" content="https://speck.nicotejera.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+
+<a class="skip" href="#loop">Skip to how it works</a>
+
+<header class="masthead">
+  <div class="shell masthead__row">
+    <span class="wordmark">
+      <img src="/icon-256.png" width="34" height="34" alt="" decoding="async">
+      Speck
+    </span>
+    <a class="masthead__repo" href="https://github.com/nicoten/speck">Source on GitHub</a>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="shell">
+      <h1>Run OpenSpec end&nbsp;to&nbsp;end, in one window.</h1>
+      <p class="hero__lede">
+        Start a change and Speck writes its proposal, specs and tasks. Read them in
+        the order your workflow declares. Then apply the change, verify it and file
+        it away — watching tasks tick themselves off as the work lands.
+      </p>
+
+      <p class="download" id="download">
+        <a class="button" id="download-link" href="https://github.com/nicoten/speck/releases/latest">
+          Download for macOS
+        </a>
+        <span class="download__note" id="download-note">
+          Apple silicon. Signed and notarised by Apple, so it opens with a double-click.
+        </span>
+      </p>
+    </div>
+
+    <figure class="shot shot--hero">
+      <div class="shot__frame">
+        <img src="/shots/hero.png" width="2400" height="1500"
+             alt="Speck showing a project's changes in the sidebar beside an open proposal."
+             fetchpriority="high" decoding="async">
+      </div>
+    </figure>
+  </section>
+
+  <section class="loop" id="loop">
+    <div class="shell">
+
+      <article class="station">
+        <h2>Start a change</h2>
+        <p>
+          Describe the idea and Speck hands it to Claude, which writes the proposal,
+          the specs, the design and the task list — then stops. Planning only, by
+          OpenSpec's own rules: nothing in your code is touched until you have read
+          what the change intends to do.
+        </p>
+      </article>
+
+      <article class="station">
+        <h2>Read it in order</h2>
+        <p>
+          Your documents are grouped by where they sit in the workflow — the project's
+          own docs, the changes in flight, the specs they will become, the archive
+          behind them. Inside a change, the order comes from the schema your project
+          declares, so <code>proposal → specs → design → tasks</code> for the stock
+          workflow and something else entirely for yours. Every document gets a number
+          in one sequence, and <kbd>⌘[</kbd> and <kbd>⌘]</kbd> walk it end to end.
+        </p>
+        <p>
+          An artifact the schema expects but nobody has written yet stays on the rail as
+          an open circle, because in a spec-driven workflow that gap tells you something.
+          It takes no number, so paging never lands on an empty page.
+        </p>
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="/shots/reading.png" width="2400" height="1500" loading="lazy" decoding="async"
+                 alt="A change expanded in the sidebar, its artifacts numbered in workflow order.">
+          </div>
+        </figure>
+      </article>
+
+      <article class="station">
+        <h2>Apply it</h2>
+        <p>
+          A change's dashboard tells you which tasks are still open, not just that five
+          of fourteen are done. Apply from there and the session runs inside Speck,
+          streaming every file it reads and every command it runs into a panel you can
+          stop mid-task. Or hand the run to your terminal and approve each step yourself.
+        </p>
+        <p>
+          Progress arrives on its own either way. The agent ticks boxes in
+          <code>tasks.md</code>, Speck notices the file change, and the count climbs in
+          the sidebar while you carry on reading. You can tick one yourself when you have
+          checked it by hand.
+        </p>
+        <figure class="shot">
+          <div class="shot__frame">
+            <img src="/shots/apply.png" width="2400" height="1500" loading="lazy" decoding="async"
+                 alt="A change's dashboard listing open tasks, with a session's activity streaming below.">
+          </div>
+        </figure>
+      </article>
+
+      <article class="station">
+        <h2>Verify, then archive</h2>
+        <p>
+          Emphasis moves as the work does. Apply leads while tasks remain, verify takes
+          over once they are all ticked, and archive stays quiet — it rewrites your main
+          specs and moves the change, which is not a button to lean on.
+        </p>
+        <p>
+          Archive is better run in your terminal, and Speck says so before you start it:
+          the workflow needs to ask how to merge the change's delta specs into your main
+          specs, and a session running headless has nobody to ask. Once it lands, the next
+          change starts where this one did.
+        </p>
+      </article>
+
+      <!-- The rail turns back on itself: OpenSpec is a circle, and the change
+           after this one starts where this one did. -->
+      <svg class="rail-return" viewBox="0 0 116 72" aria-hidden="true" focusable="false">
+        <path d="M0.5 0 V 40 Q 0.5 62 24 62 H 68 Q 91.5 62 91.5 40 V 16"/>
+        <path d="M85 23 L91.5 15 L98 23"/>
+      </svg>
+
+    </div>
+  </section>
+
+  <section class="restraint">
+    <div class="shell">
+      <h2>What Speck itself writes</h2>
+      <p>
+        An app that summons an agent into your repository owes you a straight answer about
+        what it touches. Speck writes <strong>one character</strong>: a task's checkbox, on
+        one line, in a change's own <code>tasks.md</code>. Specs, proposals and your code
+        are refused by path before anything is read, and there is no filesystem write
+        capability in the app's configuration at all.
+      </p>
+      <p>
+        The task is addressed by its text, and by which occurrence where the wording
+        repeats — never by line number, because an agent may have rewritten the file
+        between you reading it and clicking the box, and a line number would then tick the
+        wrong task with nothing to notice. If the task is no longer there, the write fails
+        and says so. The rest of the file comes back byte for byte.
+      </p>
+      <p>
+        The same honesty applies where Speck is guessing. OpenSpec records no pull request,
+        so any link to one is inference, and the app says as much rather than presenting a
+        guess as a recorded fact. It looks for a branch named after the change, then for
+        pull requests touching the change's own files, and shows every match instead of
+        picking one — the newest commit under an archived change is the commit that
+        archived it. When it finds nothing, it tells you what it looked for.
+      </p>
+    </div>
+  </section>
+
+  <section class="close">
+    <div class="shell">
+      <h2>Get it</h2>
+      <p class="download">
+        <a class="button" id="download-link-footer" href="https://github.com/nicoten/speck/releases/latest">
+          Download for macOS
+        </a>
+        <span class="download__note">
+          macOS on Apple silicon. Speck checks for a newer version on launch and offers it
+          as a line in the top bar; nothing downloads until you accept.
+        </span>
+      </p>
+      <p class="close__needs">
+        Speck reads ordering and change status from the <code>openspec</code> CLI when it
+        can find one, and falls back to walking <code>openspec/</code> itself when it
+        cannot — saying which it used rather than failing.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="shell footer__row">
+    <span class="wordmark wordmark--small">
+      <img src="/icon-256.png" width="20" height="20" alt="" loading="lazy" decoding="async">
+      Speck
+    </span>
+    <nav class="footer__links">
+      <a href="https://github.com/nicoten/speck">Repository</a>
+      <a href="https://github.com/nicoten/speck/releases">Releases</a>
+      <a href="https://openspec.dev">OpenSpec</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="/download.js" defer></script>
+</body>
+</html>

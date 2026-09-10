@@ -316,6 +316,38 @@ signature error that looks nothing like its cause.
 Releases signed by a new key fail verification against the public key compiled
 into installed copies, and every user has to reinstall by hand. Back it up.
 
+## The website
+
+[speck.nicotejera.com](https://speck.nicotejera.com) lives in `site/`. One page,
+hand-written HTML and CSS, no build step — and no Worker script either: the
+`wrangler.jsonc` there declares a static assets directory and nothing else, so
+what is deployed is a file server on a custom domain.
+
+```sh
+cd site
+npx wrangler deploy
+```
+
+That needs `wrangler login` once, and the `nicotejera.com` zone on the same
+Cloudflare account, since the custom domain is claimed from the config.
+
+The download button ships as a plain link to `releases/latest`, which is correct
+whatever the current version is, and `download.js` upgrades it to that release's
+`.dmg` — the filename carries the version, so there is no fixed URL to hardcode.
+Every failure path leaves the markup alone: an unreachable API, GitHub's
+60-requests-an-hour limit for anonymous callers, a release with no `.dmg`
+attached. There is nothing to report to the reader when the fallback is already
+the right answer.
+
+The palette and the fonts are the app's, so the two match: the `.woff2` files in
+`site/public/fonts/` are copied from `node_modules/@fontsource/ibm-plex-mono`
+and want recopying if that dependency moves. `site/og-card.html` draws the
+social card from the site's own stylesheet; copy it into `public/` and screenshot
+it at 1200×630 to regenerate `public/og.png`, then take it back out — it is a
+tool, not a page.
+
+Screenshots live in `site/public/shots/`.
+
 ## The icon
 
 `assets/icon.png` is the source: the artwork drawn on Apple's macOS icon grid,
