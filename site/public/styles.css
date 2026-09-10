@@ -216,6 +216,10 @@ a:hover {
 
 .hero {
   padding-block: 3.5rem 0;
+  /* A guard, not a layout tool: if a fallback face has wider metrics than the
+   * one-line headline was fitted for, it clips instead of giving the whole page
+   * a horizontal scrollbar. */
+  overflow-x: clip;
 }
 
 .hero h1 {
@@ -226,6 +230,19 @@ a:hover {
   line-height: 1.1;
   letter-spacing: -0.03em;
   text-wrap: balance;
+}
+
+/* The headline reads as one line once there is room for it: it keeps the page's
+ * left edge and runs right like the screenshots, and its size comes from the
+ * width it has rather than from a fixed scale. Plex Mono advances 0.6em a
+ * character and the tracking takes back 0.03em, so 39 characters need
+ * 39 x 0.57 x font-size, fitted to (0.5vw + 272px) with 8% held back. */
+@media (min-width: 62rem) {
+  .hero h1 {
+    margin-right: calc(50% - 50vw + 2.5rem);
+    white-space: nowrap;
+    font-size: min(3.4rem, calc(2.07vw + 11.2px));
+  }
 }
 
 .hero__lede {
