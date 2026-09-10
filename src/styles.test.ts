@@ -271,6 +271,24 @@ describe("agent handoff", () => {
   });
 });
 
+describe("find bar", () => {
+  it("overlays the pane instead of taking a column of the grid", () => {
+    // The bar is a child of the panes' grid. Without being positioned it would
+    // become a fourth grid item and squeeze the reader.
+    expect(rule(".find")).toContain("position: absolute");
+    expect(rule(".middle")).toContain("position: relative");
+  });
+
+  it("marks the current match with the accent and the rest more quietly", () => {
+    expect(rule("::highlight(speck-find)")).toContain("var(--op-modified-bg)");
+    expect(rule("::highlight(speck-find-current)")).toContain("var(--accent)");
+  });
+
+  it("holds the count to a width, so typing does not shift the row", () => {
+    expect(rule(".find__count")).toContain("min-width");
+  });
+});
+
 describe("responsiveness", () => {
   it("keeps a side gutter at phone width", () => {
     const narrow = css.slice(css.indexOf("@media (max-width: 720px)"));

@@ -343,6 +343,9 @@ button {
   display: grid;
   grid-template-columns: var(--rail) 1px minmax(0, 1fr);
   min-height: 0;
+  /* The containing block for the find bar, which is positioned out of the
+     grid's flow so it can overlay the pane without taking a column. */
+  position: relative;
 }
 
 .divider {
@@ -1816,6 +1819,88 @@ button {
   max-width: var(--reading-measure);
 }
 
+/* Find in the open view. A Tauri window has no find bar of its own, so this is
+   it: a strip over the top-right of the pane, clear of the sticky header's
+   text. */
+.find {
+  position: absolute;
+  top: 12px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 5px;
+  background: var(--paper-raised);
+  box-shadow: 0 10px 26px rgb(16 22 20 / 18%);
+}
+
+.find__field {
+  width: 210px;
+  padding: 4px 7px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+.find__field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Fixed width, so the row does not shift as the count changes under typing. */
+.find__count {
+  min-width: 76px;
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: right;
+}
+
+.find__step,
+.find__close {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.find__step:hover:not(:disabled),
+.find__close:hover {
+  background: var(--paper-sunk);
+  color: var(--ink);
+}
+
+.find__step:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
+/* Matches are painted through the CSS Custom Highlight API rather than wrapped
+   in elements: the pane is React's, and the watcher re-renders it whenever an
+   agent writes to the open file. */
+::highlight(speck-find) {
+  background-color: var(--op-modified-bg);
+  color: var(--ink);
+}
+
+::highlight(speck-find-current) {
+  background-color: var(--accent);
+  color: var(--paper);
+}
+
 /* Narrow windows: the sidebar collapses to a drawer over the reader. */
 @media (max-width: 720px) {
   .middle {
@@ -1852,5 +1937,16 @@ button {
 
   .reader__head {
     padding: 10px 20px;
+  }
+
+  /* No room for a 210px field beside the count on a narrow window. */
+  .find {
+    right: 20px;
+    left: 20px;
+  }
+
+  .find__field {
+    width: auto;
+    flex: 1;
   }
 }

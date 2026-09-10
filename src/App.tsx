@@ -15,6 +15,7 @@ import { Reader } from "./components/Reader";
 import { ReadingRail } from "./components/ReadingRail";
 import { Sidebar } from "./components/Sidebar";
 import { ChangeDashboard } from "./components/ChangeDashboard";
+import { FindBar } from "./components/FindBar";
 import { GitHubMark } from "./components/GitHubMark";
 import { ViewBoundary } from "./components/ViewBoundary";
 import { ConfirmRun, type RunKind, type RunRequest } from "./components/ConfirmRun";
@@ -51,6 +52,9 @@ export default function App() {
   );
   const [update, setUpdate] = useState<UpdateState>({ status: "idle" });
   const [runRequest, setRunRequest] = useState<RunRequest | null>(null);
+  const [findOpen, setFindOpen] = useState(false);
+  /** Bumped on every ⌘F, so pressing it again refocuses the open bar. */
+  const [findNonce, setFindNonce] = useState(0);
   const [handoff, setHandoff] = useState<{ busy: boolean; error: string | null }>({
     busy: false,
     error: null,
@@ -303,11 +307,22 @@ export default function App() {
       } else if (e.key === "o") {
         e.preventDefault();
         void addProject();
+      } else if (e.key === "f" && !runRequest) {
+        // Not while a sheet is up: the pane it would search is behind it.
+        e.preventDefault();
+        setFindOpen(true);
+        setFindNonce((n) => n + 1);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [nav, go, addProject]);
+  }, [nav, go, addProject, runRequest]);
+
+  // What the bar is searching. A rewrite of the open file bumps the version, so
+  // the search re-runs against the text that replaced it.
+  const findKey = `${
+    openPath ?? (openChange ? `${openChange.section}:${openChange.name}` : "home")
+  }#${treeVersion}`;
 
   const toggle = useCallback((key: string) => {
     setCollapsed((prev) => {
@@ -460,6 +475,16 @@ export default function App() {
             onToggleTask={(path, text, occurrence, done) =>
               void toggleTask(path, text, occurrence, done)
             }
+          />
+        )}
+
+        {/* Absolutely positioned, so it overlays the pane rather than taking a
+            column of the grid. */}
+        {findOpen && (
+          <FindBar
+            focusNonce={findNonce}
+            contentKey={findKey}
+            onClose={() => setFindOpen(false)}
           />
         )}
       </div>
