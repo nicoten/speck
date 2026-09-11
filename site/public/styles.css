@@ -48,11 +48,9 @@
 
   --measure: 64ch;
   --gutter: 3.25rem;
-  --shell: 42rem;
-  --shell-wide: 68rem;
-  /* The right edge shared by the headline and every screenshot, so the page has
-   * one left edge and one right edge rather than a different one per element. */
-  --wide: 64rem;
+  /* One centred column holds the page. Screenshots fill it; prose is capped at
+   * its own measure inside it, left-aligned against the same edge. */
+  --shell: 64rem;
 
   color-scheme: light;
 }
@@ -159,10 +157,6 @@ a:hover {
   padding-inline: 1.5rem;
 }
 
-.shell--wide {
-  max-width: var(--shell-wide);
-}
-
 /* ---- masthead ----------------------------------------------------------- */
 
 .masthead {
@@ -235,19 +229,14 @@ a:hover {
   text-wrap: balance;
 }
 
-/* The headline reads as one line once there is room for it: it keeps the page's
- * left edge and runs right like the screenshots, and its size comes from the
- * width it has rather than from a fixed scale. Plex Mono advances 0.6em a
+/* The headline reads as one line once the column is wide enough for it, sized
+ * from the column rather than from a fixed scale. Plex Mono advances 0.6em a
  * character and the tracking takes back 0.03em, so 39 characters need
- * 39 x 0.57 x font-size, fitted to (0.5vw + 272px) with 8% held back. */
+ * 39 x 0.57 x font-size, fitted to the column's 976px with 8% held back. */
 @media (min-width: 62rem) {
   .hero h1 {
-    margin-right: calc(50% - 50vw + 2.5rem);
-    max-width: var(--wide);
     white-space: nowrap;
-    /* Capped so the line still fits once the box stops growing: 39 characters
-     * at 0.57em each need 925px of the 1024px cap. */
-    font-size: min(2.6rem, calc(2.07vw + 11.2px));
+    font-size: min(2.5rem, calc(4.14vw - 2px));
   }
 }
 
@@ -260,6 +249,7 @@ a:hover {
 }
 
 .download {
+  max-width: var(--measure);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -301,15 +291,9 @@ a:hover {
 }
 
 .shot--hero {
-  margin-top: 3.25rem;
-  /* Below the bleed breakpoint this is exactly the text column's box; above it,
-   * the media query opens the right side up. */
-  padding-left: max(1.5rem, calc((100% - var(--shell)) / 2 + 1.5rem));
-  padding-right: max(1.5rem, calc((100% - var(--shell)) / 2 + 1.5rem));
-}
-
-.shot--hero .shot__frame {
-  max-width: var(--wide);
+  max-width: var(--shell);
+  margin: 3.25rem auto 0;
+  padding-inline: 1.5rem;
 }
 
 .shot__frame {
@@ -383,10 +367,6 @@ a:hover {
   margin-top: 1.75rem;
 }
 
-.station .shot__frame {
-  max-width: var(--wide);
-}
-
 .rail-return {
   position: relative;
   left: -0.5px;
@@ -404,7 +384,7 @@ a:hover {
   stroke-linecap: round;
 }
 
-@media (min-width: 48rem) {
+@media (min-width: 69rem) {
   .station {
     padding-left: 0;
   }
@@ -419,22 +399,6 @@ a:hover {
 
   .rail-return {
     margin-left: calc(-1 * var(--gutter));
-  }
-
-  /* A whole app window shrunk into the text column is unreadable, so the
-   * screenshots keep the column's left edge and run out to the right, the same
-   * move the hero shot makes. The arithmetic only balances once the shell is at
-   * its max width, which it is from here up; below this the shots stay in the
-   * column, which is what a phone wants anyway. The 2.5rem allowance leaves
-   * room for a classic scrollbar, which 100vw counts and the layout width
-   * does not. */
-  .station .shot {
-    margin-right: calc(50% - 50vw + 2.5rem);
-  }
-
-  /* Same allowance, so every screenshot on the page ends on one line. */
-  .shot--hero {
-    padding-right: 2.5rem;
   }
 }
 
@@ -543,8 +507,7 @@ a:hover {
 
   .shot--hero {
     margin-top: 2.25rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    padding-inline: 1.25rem;
   }
 
   .loop {
