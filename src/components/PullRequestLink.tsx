@@ -44,12 +44,12 @@ export function PullRequestLink({
   }, [root, change]);
 
   if (!lookup) {
-    return <p className="prs prs--quiet">Looking for pull requests…</p>;
+    return <p className="prs-note">Looking for pull requests…</p>;
   }
 
   if (lookup.status === "unavailable") {
     return (
-      <p className="prs prs--quiet" title={lookup.reason}>
+      <p className="prs-note" title={lookup.reason}>
         Pull requests unknown — {lookup.reason}
       </p>
     );
@@ -57,7 +57,7 @@ export function PullRequestLink({
 
   if (lookup.status === "none") {
     return (
-      <p className="prs prs--quiet">
+      <p className="prs-note">
         No pull request found on <code>{lookup.branch}</code>, or in commits
         touching this change
       </p>
@@ -68,7 +68,7 @@ export function PullRequestLink({
   // is defensive is that it was not, and the whole dashboard went down.
   const pullRequests = lookup.pullRequests ?? [];
   if (pullRequests.length === 0) {
-    return <p className="prs prs--quiet">No pull requests found</p>;
+    return <p className="prs-note">No pull requests found</p>;
   }
 
   return (

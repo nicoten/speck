@@ -185,7 +185,7 @@ describe("forge links", () => {
   });
 
   it("keeps a missing pull request quiet rather than alarming", () => {
-    expect(rule(".prs--quiet")).toContain("var(--ink-faint)");
+    expect(rule(".prs-note")).toContain("var(--ink-faint)");
     expect(rule(".prs__basis")).toContain("var(--ink-faint)");
   });
 
@@ -298,5 +298,38 @@ describe("responsiveness", () => {
 
   it("respects reduced motion", () => {
     expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+  });
+});
+
+describe("pull request lines", () => {
+  // A paragraph of prose was given the class that lays the pull request list
+  // out as a flex column. Every child became a flex item, so the sentence
+  // "No pull request found on <branch>, or in commits touching this change"
+  // broke into three stacked lines, one of them starting with a comma.
+  it("lays the list out as a column", () => {
+    expect(rule(".prs")).toContain("display: flex");
+  });
+
+  it("does not make a sentence into a flex container", () => {
+    const note = rule(".prs-note");
+    expect(note).not.toContain("display: flex");
+  });
+
+  it("keeps the note clear of what follows it", () => {
+    // It ran into the artifact trail because the quiet variant overrode the
+    // list's bottom margin with zero.
+    const shorthand = /margin:\s*([^;]+);/.exec(rule(".prs-note"))?.[1] ?? "";
+    const parts = shorthand.trim().split(/\s+/);
+    const bottom = parts.length >= 3 ? parts[2] : parts[parts.length - 1];
+    expect(bottom, `bottom margin of .prs-note (${shorthand})`).not.toMatch(/^0/);
+  });
+
+  it("keeps the markup off the flex class for prose", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("./components/PullRequestLink.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(source).not.toContain('"prs prs--quiet"');
+    expect(source).not.toContain("prs--quiet");
   });
 });

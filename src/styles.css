@@ -1082,13 +1082,17 @@ button {
   margin: 0 0 18px;
 }
 
-.prs--quiet {
-  margin: 8px 0 0;
+/* A sentence, not a list. It carried `.prs` as well, which laid it out as a
+ * flex column: the text, the branch name and the rest of the sentence each
+ * became a flex item on its own line, and the overridden margin let it run into
+ * the artifact trail below. */
+.prs-note {
+  margin: 8px 0 14px;
   font-size: 12px;
   color: var(--ink-faint);
 }
 
-.prs--quiet code {
+.prs-note code {
   font-family: var(--mono);
   font-size: 11px;
 }
