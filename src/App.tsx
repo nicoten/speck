@@ -23,7 +23,9 @@ import { UpdateNotice } from "./components/UpdateNotice";
 import { Welcome } from "./components/Welcome";
 import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updates";
 
-const RAIL_WIDTH = "speck:rail-width";
+const RAIL_WIDTH = "specks:rail-width";
+/** The key this setting used before the app was renamed. */
+const RAIL_WIDTH_WAS = "speck:rail-width";
 
 /** github.com itself, or an Enterprise host named after it. */
 const isGitHub = (host: string) =>
@@ -47,8 +49,11 @@ export default function App() {
   const [cliVersion, setCliVersion] = useState<string | null>(null);
   const [repo, setRepo] = useState<ipc.Repo | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [railWidth, setRailWidth] = useState(() =>
-    Number(localStorage.getItem(RAIL_WIDTH)) || 268,
+  const [railWidth, setRailWidth] = useState(
+    () =>
+      Number(localStorage.getItem(RAIL_WIDTH)) ||
+      Number(localStorage.getItem(RAIL_WIDTH_WAS)) ||
+      268,
   );
   const [update, setUpdate] = useState<UpdateState>({ status: "idle" });
   const [runRequest, setRunRequest] = useState<RunRequest | null>(null);
@@ -257,7 +262,7 @@ export default function App() {
 
   // ------------------------------------------------------- agent handoff
 
-  // These are agent workflows, not CLI commands, so Speck hands them to a
+  // These are agent workflows, not CLI commands, so Specks hands them to a
   // Claude session in the terminal — where each step can be approved as it
   // happens. Progress comes back through the watcher, as ticked tasks.
   const beginRun = useCallback(

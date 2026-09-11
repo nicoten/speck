@@ -1,11 +1,11 @@
 //! Handing work to a Claude session in the user's terminal.
 //!
-//! Speck does not do the work and does not write to your project. OpenSpec's
+//! Specks does not do the work and does not write to your project. OpenSpec's
 //! apply and propose are agent workflows — the CLI produces a brief, an agent
 //! carries it out — so this writes a short script to the OS temp directory and
 //! asks the system to open it. The session then runs where you can see it and
 //! approve what it does, which is why this is a handoff rather than something
-//! Speck drives itself.
+//! Specks drives itself.
 //!
 //! The webview asks for an [`AgentAction`], never a command line: it can name a
 //! change or describe an idea, and nothing else.
@@ -98,13 +98,13 @@ fn shell_single_quote(value: &str) -> String {
 fn script_body(root: &Path, prompt_file: &Path) -> String {
     format!(
         r#"#!/bin/bash
-# Written by Speck. Runs an OpenSpec workflow in this project with Claude Code.
+# Written by Specks. Runs an OpenSpec workflow in this project with Claude Code.
 # Close this window when the session is finished.
 cd {root} || exit 1
 prompt=$(cat {prompt_file}) || exit 1
 rm -f {prompt_file}
 if ! command -v claude >/dev/null 2>&1; then
-  echo "Speck could not find the 'claude' command on your PATH."
+  echo "Specks could not find the 'claude' command on your PATH."
   echo "Install Claude Code, then run:  claude \"$prompt\""
   exec "$SHELL" -il
 fi
@@ -120,7 +120,7 @@ fn unique_name(slug: &str, ext: &str) -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_millis())
         .unwrap_or(0);
-    format!("speck-{slug}-{stamp}.{ext}")
+    format!("specks-{slug}-{stamp}.{ext}")
 }
 
 /// A handoff written to disk and ready to open.
@@ -347,7 +347,7 @@ mod tests {
             .filter(|e| {
                 e.path()
                     .file_name()
-                    .is_some_and(|n| n.to_string_lossy().starts_with("speck-"))
+                    .is_some_and(|n| n.to_string_lossy().starts_with("specks-"))
                     && e.path().extension().is_some_and(|x| x == "txt")
             })
             .count();

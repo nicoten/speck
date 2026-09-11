@@ -78,7 +78,7 @@ export type AgentAction =
   | { kind: "propose"; idea: string };
 
 /**
- * Tick a task off, or un-tick it — the only write Speck makes to a project.
+ * Tick a task off, or un-tick it — the only write Specks makes to a project.
  *
  * The task is named by its text and, where the same wording repeats, by which
  * occurrence. Not by line number: the file may have been rewritten since it was

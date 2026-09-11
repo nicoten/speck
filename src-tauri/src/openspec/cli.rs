@@ -41,8 +41,8 @@ impl Resolved {
 
 /// Markers so the shell probe's output can be parsed even when an interactive
 /// rc file prints banners of its own.
-const PATH_MARKER: &str = "__speck_path__";
-const BIN_MARKER: &str = "__speck_bin__";
+const PATH_MARKER: &str = "__specks_path__";
+const BIN_MARKER: &str = "__specks_bin__";
 
 /// How long to wait for the user's shell to start. An rc file that blocks must
 /// not hang the app at launch.

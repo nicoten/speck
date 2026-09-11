@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Speck",
+  "productName": "Specks",
   "version": "0.4.0",
-  "identifier": "com.nicotejera.speck",
+  "identifier": "com.nicotejera.specks",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Speck",
+        "title": "Specks",
         "width": 1280,
         "height": 840,
         "minWidth": 720,
@@ -40,7 +40,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUwMzg2RDZFNDgzRjlGMTQKUldRVW56OUlibTA0VVB6a095R1VjS2t6NkhQS2VrSnVTT2ozRXJDOVBvNys2YXl5cGxKRG5zTWsK",
       "endpoints": [
-        "https://github.com/nicoten/speck/releases/latest/download/latest.json"
+        "https://github.com/nicoten/specks/releases/latest/download/latest.json"
       ]
     }
   }

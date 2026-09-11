@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Build and package a Speck release.
+# Build and package a Specks release.
 #
-# Signing keys are taken only from ~/.speck, never from the environment: a
+# Signing keys are taken only from ~/.specks, never from the environment: a
 # TAURI_SIGNING_* variable exported in a shell profile would otherwise sign
-# Speck with another project's key, and the app would then refuse its own
+# Specks with another project's key, and the app would then refuse its own
 # updates. Anything inherited is cleared first.
 #
 # The DMG is built with hdiutil rather than Tauri's bundler, which drives Finder
@@ -11,7 +11,7 @@
 # is busy.
 set -euo pipefail
 
-KEYS="${SPECK_KEYS:-$HOME/.speck}"
+KEYS="${SPECKS_KEYS:-$HOME/.specks}"
 KEY="$KEYS/updater.key"
 PASS_FILE="$KEYS/updater.pass"
 
@@ -36,7 +36,7 @@ case "$ARCH" in
   *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
 esac
 
-echo "Building Speck $VERSION for $TARGET"
+echo "Building Specks $VERSION for $TARGET"
 
 BUNDLE="$ROOT/src-tauri/target/release/bundle"
 rm -f "$BUNDLE"/macos/rw.*.dmg "$BUNDLE"/dmg/rw.*.dmg 2>/dev/null || true
@@ -48,8 +48,8 @@ env -u TAURI_SIGNING_PRIVATE_KEY \
     TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat "$PASS_FILE")" \
     pnpm tauri build --bundles app
 
-APP="$BUNDLE/macos/Speck.app"
-TARBALL="$BUNDLE/macos/Speck.app.tar.gz"
+APP="$BUNDLE/macos/Specks.app"
+TARBALL="$BUNDLE/macos/Specks.app.tar.gz"
 SIG="$TARBALL.sig"
 
 for f in "$APP" "$TARBALL" "$SIG"; do
@@ -62,8 +62,8 @@ OUT="$ROOT/dist-release"
 rm -rf "$OUT" && mkdir -p "$OUT/stage"
 cp -R "$APP" "$OUT/stage/"
 ln -s /Applications "$OUT/stage/Applications"
-DMG="$OUT/Speck_${VERSION}_${ARCH}.dmg"
-hdiutil create -quiet -volname "Speck $VERSION" -srcfolder "$OUT/stage" \
+DMG="$OUT/Specks_${VERSION}_${ARCH}.dmg"
+hdiutil create -quiet -volname "Specks $VERSION" -srcfolder "$OUT/stage" \
   -ov -format UDZO "$DMG"
 rm -rf "$OUT/stage"
 
@@ -79,14 +79,14 @@ with open(sig_path) as f:
     signature = f.read().strip()
 manifest = {
     "version": version,
-    "notes": f"Speck {version}",
+    "notes": f"Specks {version}",
     "pub_date": datetime.datetime.now(datetime.timezone.utc)
         .replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     "platforms": {
         target: {
             "signature": signature,
-            "url": "https://github.com/nicoten/speck/releases/download/"
-                   f"v{version}/Speck.app.tar.gz",
+            "url": "https://github.com/nicoten/specks/releases/download/"
+                   f"v{version}/Specks.app.tar.gz",
         }
     },
 }

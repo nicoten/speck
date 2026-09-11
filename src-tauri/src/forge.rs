@@ -2,7 +2,7 @@
 //!
 //! OpenSpec has no notion of a pull request: there is no field for one, and
 //! nothing in the CLI knows about branches. So the link is inferred from a
-//! convention Speck can check rather than invent — a pull request whose head
+//! convention Specks can check rather than invent — a pull request whose head
 //! branch is named after the change. Where that convention does not hold,
 //! nothing is shown, and the reason is stated rather than left blank.
 

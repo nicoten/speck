@@ -1,4 +1,4 @@
-# Speck
+# Specks
 
 A desktop reader for [OpenSpec](https://openspec.dev) projects. It groups a
 project's documents by where they sit in the workflow and numbers them, so you
@@ -9,7 +9,7 @@ can read a project front to back instead of guessing which file comes next.
 The order is not hardcoded. A project declares a workflow schema in
 `openspec/config.yaml`, and that schema declares its artifacts and their
 dependencies — for the stock `spec-driven` schema, `proposal → specs → design →
-tasks`. Speck reads the order from there, so a project with a custom schema
+tasks`. Specks reads the order from there, so a project with a custom schema
 is read in its own order.
 
 Sections are fixed:
@@ -29,7 +29,7 @@ in the sequence, so paging never lands on an empty document.
 
 ## Where the data comes from
 
-The `openspec` CLI is the authority on ordering and change status, so Speck
+The `openspec` CLI is the authority on ordering and change status, so Specks
 prefers it: `openspec status --all --json`, `list --json`, and
 `list --specs --json`, run with the working directory set to the project root.
 Document bodies are read from the `.md` files directly, because
@@ -52,9 +52,9 @@ The CLI is looked up on `PATH`, then through a login shell, then in the usual
 install locations — a macOS app launched from Finder does not inherit your
 shell's `PATH`, so version-manager shims are invisible without that.
 
-## What Speck writes
+## What Specks writes
 
-Speck writes exactly one thing: **a task's checkbox**. Clicking a box in the
+Specks writes exactly one thing: **a task's checkbox**. Clicking a box in the
 dashboard or in a `tasks.md` view flips one character on one line of that file.
 
 Everything about that edit is deliberately narrow:
@@ -80,7 +80,7 @@ had already landed — and the file still decides, because new content clears
 whatever was held, and a refused write drops its own and snaps the box back with
 the error. What ends up on screen is what is on disk, just not only that.
 
-Beyond that, Speck reads. Document reads go through the app's own commands,
+Beyond that, Specks reads. Document reads go through the app's own commands,
 which refuse any path outside an open project, and there is no filesystem write
 capability in `tauri.conf.json` at all — the checkbox edit goes through that one
 audited command.
@@ -130,7 +130,7 @@ yourself when you have verified it by hand.
 
 OpenSpec records no pull request. There is no field for one, nothing in the CLI
 knows about branches, and a change's `.openspec.yaml` holds workflow flags, not
-links. So any link is **inference**, and Speck says so rather than presenting a
+links. So any link is **inference**, and Specks says so rather than presenting a
 guess as a recorded fact.
 
 Two strategies, in order:
@@ -164,10 +164,10 @@ proposes one; a change's dashboard carries **Apply**, **Verify** and
 **Archive**. None of these is a plain CLI command — `openspec instructions
 apply --json` produces a brief, and an agent carries it out.
 
-So Speck hands off rather than driving. It writes a short script to the OS temp
+So Specks hands off rather than driving. It writes a short script to the OS temp
 directory and asks the system to open it, which starts a Claude session in your
 terminal, in the project root. The work happens where you can watch it and
-approve each step, and Speck's own guarantee is untouched. Progress comes back
+approve each step, and Specks's own guarantee is untouched. Progress comes back
 on its own: the agent ticks boxes in `tasks.md`, the watcher notices, and
 `Tasks 3/14` climbs in the sidebar while you read.
 
@@ -180,7 +180,7 @@ which is another reason it belongs in a terminal.
 Two things keep the handoff narrow:
 
 - The webview asks for a **structured action** — apply, verify or archive a
-  named change, or propose an idea — never a command line. It cannot ask Speck
+  named change, or propose an idea — never a command line. It cannot ask Specks
   to run something else, and a change name is validated as a directory name
   rather than trusted.
 - The prompt reaches the session **through a file** rather than interpolated
@@ -193,7 +193,7 @@ specs, design and tasks, then stops. `apply` is the one that implements code.
 
 OpenSpec records no pull request. There is no field for one, nothing in the CLI
 knows about branches, and a change's `.openspec.yaml` holds workflow flags, not
-links. So any link is **inference**, and Speck says so rather than presenting a
+links. So any link is **inference**, and Specks says so rather than presenting a
 guess as a recorded fact.
 
 Two strategies, in order:
@@ -236,7 +236,7 @@ workflow asks how to merge the change's delta specs into the main specs —
 sync now, archive without syncing, or cancel — before doing anything. Run
 in-app, headless, there is nobody to ask, so Claude decides that alone.
 
-The session runs inside Speck and streams what it is doing into a panel above
+The session runs inside Specks and streams what it is doing into a panel above
 the reading rail: the files it reads and edits, the commands it runs, what it
 says, and how it ended. You can stop it at any point, which kills the process
 mid-task — the panel says so rather than pretending the run completed.
@@ -259,10 +259,10 @@ step is approved before it happens. The confirmation says which you are getting.
 
 ### Running in a terminal instead
 
-The same confirmation offers a terminal handoff: Speck writes a short script to
+The same confirmation offers a terminal handoff: Specks writes a short script to
 the OS temp directory and asks the system to open it, starting the session in
 your own terminal at the project root. Approvals then happen in the Claude Code
-UI, and Speck does not watch a session it does not run.
+UI, and Specks does not watch a session it does not run.
 
 Two things keep either path narrow. The webview asks for a **structured
 action** — apply a named change, or propose an idea — never a command line, and
@@ -273,13 +273,13 @@ as text.
 
 ## Installing
 
-Download the `.dmg` from [the latest release](https://github.com/nicoten/speck/releases/latest)
-and drag Speck to Applications. Builds are signed with a Developer ID and
+Download the `.dmg` from [the latest release](https://github.com/nicoten/specks/releases/latest)
+and drag Specks to Applications. Builds are signed with a Developer ID and
 notarised by Apple, so it opens with a double-click — no Gatekeeper detour.
 
 Apple Silicon only for now; an Intel build would need a second release artifact.
 
-Speck checks for a newer release on launch and offers it as a line in the top
+Specks checks for a newer release on launch and offers it as a line in the top
 bar; nothing is downloaded until you accept. Updates are verified against a
 public key compiled into the app, so a release that is not signed with the
 matching private key is refused.
@@ -300,16 +300,16 @@ Bump `version` in **both** `src-tauri/tauri.conf.json` and `package.json`, then:
 
 ```sh
 ./scripts/release.sh
-gh release create v0.1.0 dist-release/* --title "Speck 0.1.0" --notes "..."
+gh release create v0.1.0 dist-release/* --title "Specks 0.1.0" --notes "..."
 ```
 
 The script produces `dist-release/`:
 
 | Artifact | Purpose |
 | --- | --- |
-| `Speck_<version>_arm64.dmg` | what people download |
-| `Speck.app.tar.gz` | what the updater installs |
-| `Speck.app.tar.gz.sig` | signature the app verifies |
+| `Specks_<version>_arm64.dmg` | what people download |
+| `Specks.app.tar.gz` | what the updater installs |
+| `Specks.app.tar.gz.sig` | signature the app verifies |
 | `latest.json` | the manifest the app polls |
 
 All four must be attached to the release: the app reads the manifest from
@@ -321,20 +321,20 @@ the two config files have to agree — the script refuses to build if they don't
 
 ### Signing keys
 
-`~/.speck/updater.key` and `~/.speck/updater.pass`, mode 600, outside this repo.
+`~/.specks/updater.key` and `~/.specks/updater.pass`, mode 600, outside this repo.
 
 The script deliberately **clears any inherited `TAURI_SIGNING_*` variables** and
 reads only those files. A key exported in a shell profile would otherwise sign
-Speck with the wrong key, and the app would then reject its own updates with a
+Specks with the wrong key, and the app would then reject its own updates with a
 signature error that looks nothing like its cause.
 
-**Losing the private key breaks updates for everyone already running Speck.**
+**Losing the private key breaks updates for everyone already running Specks.**
 Releases signed by a new key fail verification against the public key compiled
 into installed copies, and every user has to reinstall by hand. Back it up.
 
 ## The website
 
-[speck.nicotejera.com](https://speck.nicotejera.com) lives in `site/`. One page,
+[specks.nicotejera.com](https://specks.nicotejera.com) lives in `site/`. One page,
 hand-written HTML and CSS, no build step — and no Worker script either: the
 `wrangler.jsonc` there declares a static assets directory and nothing else, so
 what is deployed is a file server on a custom domain.

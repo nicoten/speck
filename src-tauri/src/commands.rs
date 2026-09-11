@@ -167,9 +167,9 @@ pub fn set_task_done(
 
 /// Start an OpenSpec workflow for a project that is open.
 ///
-/// Speck hands the work to a Claude session in the user's terminal rather than
+/// Specks hands the work to a Claude session in the user's terminal rather than
 /// running it: these are agent workflows, and the terminal is where each step
-/// can be approved as it happens. The project must be one Speck has loaded, and
+/// can be approved as it happens. The project must be one Specks has loaded, and
 /// the action is structured rather than a command line.
 #[tauri::command]
 pub fn start_agent_session(
@@ -188,7 +188,7 @@ pub fn start_agent_session(
     Ok(())
 }
 
-/// Require that a path is a project Speck has open.
+/// Require that a path is a project Specks has open.
 fn open_root(state: &State<'_, AppState>, path: &str) -> CmdResult<PathBuf> {
     let root = PathBuf::from(path)
         .canonicalize()
@@ -236,5 +236,16 @@ pub fn init_state(app: &AppHandle) -> AppState {
         .path()
         .app_config_dir()
         .unwrap_or_else(|_| PathBuf::from("."));
+
+    // This app was called Speck, and macOS derives this directory from the
+    // bundle identifier, so the rename left the saved projects behind. Bring
+    // them forward once rather than opening to an empty window.
+    if let Some(parent) = config_dir.parent() {
+        crate::library::adopt_previous_library(
+            &config_dir,
+            &parent.join(crate::library::PREVIOUS_IDENTIFIER),
+        );
+    }
+
     AppState::new(config_dir)
 }

@@ -1,6 +1,6 @@
 //! Ticking a task off.
 //!
-//! This is the only thing Speck writes into a project, and it is deliberately
+//! This is the only thing Specks writes into a project, and it is deliberately
 //! the smallest edit that can be made: one character on one line of one
 //! `tasks.md`. Everything else in the file — indentation, bullet style, spacing,
 //! line endings, the trailing newline — comes back byte for byte, because a
@@ -110,7 +110,7 @@ pub fn toggle(markdown: &str, text: &str, occurrence: usize, done: bool) -> Resu
     Ok(out)
 }
 
-/// Is this a file Speck is willing to write to?
+/// Is this a file Specks is willing to write to?
 ///
 /// Only a change's own `tasks.md`. The path has already been checked to sit
 /// inside an open project; this narrows it to the one file whose one character
@@ -129,7 +129,7 @@ fn is_change_tasks_file(path: &Path) -> bool {
 pub fn set_done(path: &Path, text: &str, occurrence: usize, done: bool) -> Result<()> {
     if !is_change_tasks_file(path) {
         return Err(anyhow!(
-            "Speck only edits a change's tasks.md, not {}",
+            "Specks only edits a change's tasks.md, not {}",
             path.display()
         ));
     }
@@ -143,7 +143,7 @@ pub fn set_done(path: &Path, text: &str, occurrence: usize, done: bool) -> Resul
 
     // Write beside the file and rename over it: an interrupted write must not
     // leave someone's task list truncated.
-    let temp = path.with_extension("md.speck-tmp");
+    let temp = path.with_extension("md.specks-tmp");
     std::fs::write(&temp, &updated).with_context(|| format!("writing {}", temp.display()))?;
     std::fs::rename(&temp, path).with_context(|| format!("replacing {}", path.display()))?;
     Ok(())
@@ -279,7 +279,7 @@ mod tests {
         let strays: Vec<_> = std::fs::read_dir(&change)
             .unwrap()
             .flatten()
-            .filter(|e| e.file_name().to_string_lossy().contains("speck-tmp"))
+            .filter(|e| e.file_name().to_string_lossy().contains("specks-tmp"))
             .collect();
         assert!(strays.is_empty(), "temp file left behind");
     }

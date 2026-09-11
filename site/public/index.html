@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Speck — run OpenSpec end to end</title>
+<title>Specks — run OpenSpec end to end</title>
 <meta name="description" content="A macOS app for OpenSpec projects. Start a change, read its proposal and specs in workflow order, then apply, verify and archive it without leaving the window.">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
@@ -12,10 +12,10 @@
 <meta name="theme-color" content="#f2efe3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0908" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Speck — run OpenSpec end to end">
+<meta property="og:title" content="Specks — run OpenSpec end to end">
 <meta property="og:description" content="A macOS app for OpenSpec projects. Start a change, read its proposal and specs in workflow order, then apply, verify and archive it without leaving the window.">
-<meta property="og:url" content="https://speck.nicotejera.com/">
-<meta property="og:image" content="https://speck.nicotejera.com/og.png">
+<meta property="og:url" content="https://specks.nicotejera.com/">
+<meta property="og:image" content="https://specks.nicotejera.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
@@ -26,9 +26,9 @@
   <div class="shell masthead__row">
     <span class="wordmark">
       <img src="/icon-256.png" width="34" height="34" alt="" decoding="async">
-      Speck
+      Specks
     </span>
-    <a class="masthead__repo" href="https://github.com/nicoten/speck">Source on GitHub</a>
+    <a class="masthead__repo" href="https://github.com/nicoten/specks">Source on GitHub</a>
   </div>
 </header>
 
@@ -38,13 +38,13 @@
     <div class="shell">
       <h1>Run OpenSpec end&nbsp;to&nbsp;end, in one window.</h1>
       <p class="hero__lede">
-        Start a change and Speck writes its proposal, specs and tasks. Read them in
+        Start a change and Specks writes its proposal, specs and tasks. Read them in
         the order your workflow declares. Then apply the change, verify it and file
         it away — watching tasks tick themselves off as the work lands.
       </p>
 
       <p class="download" id="download">
-        <a class="button" id="download-link" href="https://github.com/nicoten/speck/releases/latest">
+        <a class="button" id="download-link" href="https://github.com/nicoten/specks/releases/latest">
           Download for macOS
         </a>
         <span class="download__note" id="download-note">
@@ -56,7 +56,7 @@
     <figure class="shot shot--hero">
       <div class="shot__frame">
         <img src="/shots/hero.png" width="1802" height="1682"
-             alt="Speck's window: a sidebar listing the project's document, its one active change with numbered artifacts, its specs and its empty archive, beside the project overview and its counts."
+             alt="Specks's window: a sidebar listing the project's document, its one active change with numbered artifacts, its specs and its empty archive, beside the project overview and its counts."
              fetchpriority="high" decoding="async">
       </div>
     </figure>
@@ -68,7 +68,7 @@
       <article class="station">
         <h2>Start a change</h2>
         <p>
-          Describe the idea and Speck hands it to Claude, which writes the proposal,
+          Describe the idea and Specks hands it to Claude, which writes the proposal,
           the specs, the design and the task list — then stops. Planning only, by
           OpenSpec's own rules: nothing in your code is touched until you have read
           what the change intends to do.
@@ -103,13 +103,13 @@
         <p>
           The task list tells you which ones are still open, not just that three of
           twenty-one are done, and a change's dashboard says the same thing beside its
-          artifacts. Apply from either and the session runs inside Speck, streaming every
+          artifacts. Apply from either and the session runs inside Specks, streaming every
           file it reads and every command it runs into a panel you can stop mid-task. Or
           hand the run to your terminal and approve each step yourself.
         </p>
         <p>
           Progress arrives on its own either way. The agent ticks boxes in
-          <code>tasks.md</code>, Speck notices the file change, and the count climbs in
+          <code>tasks.md</code>, Specks notices the file change, and the count climbs in
           the sidebar while you carry on reading. You can tick one yourself when you have
           checked it by hand.
         </p>
@@ -129,7 +129,7 @@
           specs and moves the change, which is not a button to lean on.
         </p>
         <p>
-          Archive is better run in your terminal, and Speck says so before you start it:
+          Archive is better run in your terminal, and Specks says so before you start it:
           the workflow needs to ask how to merge the change's delta specs into your main
           specs, and a session running headless has nobody to ask. Once it lands, the next
           change starts where this one did.
@@ -148,10 +148,10 @@
 
   <section class="restraint">
     <div class="shell">
-      <h2>What Speck itself writes</h2>
+      <h2>What Specks itself writes</h2>
       <p>
         An app that summons an agent into your repository owes you a straight answer about
-        what it touches. Speck writes <strong>one character</strong>: a task's checkbox, on
+        what it touches. Specks writes <strong>one character</strong>: a task's checkbox, on
         one line, in a change's own <code>tasks.md</code>. Specs, proposals and your code
         are refused by path before anything is read, and there is no filesystem write
         capability in the app's configuration at all.
@@ -164,7 +164,7 @@
         and says so. The rest of the file comes back byte for byte.
       </p>
       <p>
-        The same honesty applies where Speck is guessing. OpenSpec records no pull request,
+        The same honesty applies where Specks is guessing. OpenSpec records no pull request,
         so any link to one is inference, and the app says as much rather than presenting a
         guess as a recorded fact. It looks for a branch named after the change, then for
         pull requests touching the change's own files, and shows every match instead of
@@ -178,16 +178,16 @@
     <div class="shell">
       <h2>Get it</h2>
       <p class="download">
-        <a class="button" id="download-link-footer" href="https://github.com/nicoten/speck/releases/latest">
+        <a class="button" id="download-link-footer" href="https://github.com/nicoten/specks/releases/latest">
           Download for macOS
         </a>
         <span class="download__note">
-          macOS on Apple silicon. Speck checks for a newer version on launch and offers it
+          macOS on Apple silicon. Specks checks for a newer version on launch and offers it
           as a line in the top bar; nothing downloads until you accept.
         </span>
       </p>
       <p class="close__needs">
-        Speck reads ordering and change status from the <code>openspec</code> CLI when it
+        Specks reads ordering and change status from the <code>openspec</code> CLI when it
         can find one, and falls back to walking <code>openspec/</code> itself when it
         cannot — saying which it used rather than failing.
       </p>
@@ -200,11 +200,11 @@
   <div class="shell footer__row">
     <span class="wordmark wordmark--small">
       <img src="/icon-256.png" width="20" height="20" alt="" loading="lazy" decoding="async">
-      Speck
+      Specks
     </span>
     <nav class="footer__links">
-      <a href="https://github.com/nicoten/speck">Repository</a>
-      <a href="https://github.com/nicoten/speck/releases">Releases</a>
+      <a href="https://github.com/nicoten/specks">Repository</a>
+      <a href="https://github.com/nicoten/specks/releases">Releases</a>
       <a href="https://openspec.dev">OpenSpec</a>
     </nav>
   </div>

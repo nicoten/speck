@@ -280,8 +280,8 @@ describe("find bar", () => {
   });
 
   it("marks the current match with the accent and the rest more quietly", () => {
-    expect(rule("::highlight(speck-find)")).toContain("var(--op-modified-bg)");
-    expect(rule("::highlight(speck-find-current)")).toContain("var(--accent)");
+    expect(rule("::highlight(specks-find)")).toContain("var(--op-modified-bg)");
+    expect(rule("::highlight(specks-find-current)")).toContain("var(--accent)");
   });
 
   it("holds the count to a width, so typing does not shift the row", () => {

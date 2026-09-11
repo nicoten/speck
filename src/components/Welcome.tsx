@@ -11,7 +11,7 @@ export function Welcome({ onAdd, error, cliVersion }: Props) {
       <div className="blank__inner">
         <h1>Read a project in order</h1>
         <p>
-          Point Speck at a folder that contains an <code>openspec</code>{" "}
+          Point Specks at a folder that contains an <code>openspec</code>{" "}
           directory. It groups the project by where each document sits in the
           workflow, and numbers them so you can read start to finish.
         </p>
@@ -26,7 +26,7 @@ export function Welcome({ onAdd, error, cliVersion }: Props) {
         <p className="blank__hint">
           {cliVersion
             ? `Using the openspec CLI, version ${cliVersion}.`
-            : "The openspec CLI was not found, so Speck will read projects with its own scanner."}
+            : "The openspec CLI was not found, so Specks will read projects with its own scanner."}
         </p>
       </div>
     </div>

@@ -10,7 +10,7 @@
 (function () {
   "use strict";
 
-  var RELEASE = "https://api.github.com/repos/nicoten/speck/releases/latest";
+  var RELEASE = "https://api.github.com/repos/nicoten/specks/releases/latest";
 
   function apply(release) {
     var assets = Array.isArray(release && release.assets) ? release.assets : [];
@@ -28,7 +28,7 @@
 
     // "v0.4.0" and "0.4.0" both reach the button as "0.4.0".
     var version = String(release.tag_name || "").replace(/^v/, "");
-    var label = version ? "Download Speck " + version : "Download Speck";
+    var label = version ? "Download Specks " + version : "Download Specks";
     var links = document.querySelectorAll("[id^=download-link]");
 
     for (var j = 0; j < links.length; j++) {

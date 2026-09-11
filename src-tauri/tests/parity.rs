@@ -5,7 +5,7 @@
 //! Volatile metadata (timestamps, status wording) is expected to differ and is
 //! not compared; document identity, kind, schema step and reading sequence are.
 
-use speck_lib::openspec::{self, model::*};
+use specks_lib::openspec::{self, model::*};
 use std::path::Path;
 
 /// A fixture project exercising the shapes that matter: several changes, a

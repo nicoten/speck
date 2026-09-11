@@ -44,6 +44,31 @@ fn display_name(path: &Path) -> String {
         .unwrap_or_else(|| path.to_string_lossy().to_string())
 }
 
+/// The bundle identifier this app used when it was called Speck.
+///
+/// macOS derives the config directory from the identifier, so renaming the app
+/// moved it — and a library saved under the old name would have simply
+/// disappeared from the window with the file still sitting on disk.
+pub const PREVIOUS_IDENTIFIER: &str = "com.nicotejera.speck";
+
+/// Copy a library saved under the previous identifier into this one, and say
+/// whether it did.
+///
+/// Copied rather than moved, so a downgrade still finds its projects, and only
+/// when this identifier has no library of its own — whatever is here now was
+/// written by a newer version than whatever is there, so it wins.
+pub fn adopt_previous_library(config_dir: &Path, previous: &Path) -> bool {
+    let target = config_dir.join("projects.json");
+    let source = previous.join("projects.json");
+    if target.exists() || !source.exists() {
+        return false;
+    }
+    if std::fs::create_dir_all(config_dir).is_err() {
+        return false;
+    }
+    std::fs::copy(&source, &target).is_ok()
+}
+
 pub struct Library {
     file: PathBuf,
 }
@@ -175,4 +200,67 @@ fn discovered_stores() -> Vec<ProjectEntry> {
             })
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn library_at(dir: &Path, contents: &str) {
+        std::fs::create_dir_all(dir).unwrap();
+        std::fs::write(dir.join("projects.json"), contents).unwrap();
+    }
+
+    #[test]
+    fn carries_the_library_across_from_the_previous_identifier() {
+        let tmp = tempfile::tempdir().unwrap();
+        let old = tmp.path().join("com.nicotejera.speck");
+        let new = tmp.path().join("com.nicotejera.specks");
+        library_at(&old, r#"{"projects":[]}"#);
+
+        assert!(adopt_previous_library(&new, &old));
+        assert_eq!(
+            std::fs::read_to_string(new.join("projects.json")).unwrap(),
+            r#"{"projects":[]}"#
+        );
+    }
+
+    #[test]
+    fn leaves_the_old_library_where_it_is() {
+        // Copied, not moved: a downgrade to the previous version should still
+        // find its projects rather than an empty window.
+        let tmp = tempfile::tempdir().unwrap();
+        let old = tmp.path().join("com.nicotejera.speck");
+        let new = tmp.path().join("com.nicotejera.specks");
+        library_at(&old, r#"{"projects":[]}"#);
+
+        adopt_previous_library(&new, &old);
+        assert!(old.join("projects.json").exists());
+    }
+
+    #[test]
+    fn never_overwrites_a_library_that_already_exists() {
+        let tmp = tempfile::tempdir().unwrap();
+        let old = tmp.path().join("com.nicotejera.speck");
+        let new = tmp.path().join("com.nicotejera.specks");
+        library_at(&old, r#"{"projects":["old"]}"#);
+        library_at(&new, r#"{"projects":["current"]}"#);
+
+        assert!(!adopt_previous_library(&new, &old));
+        assert_eq!(
+            std::fs::read_to_string(new.join("projects.json")).unwrap(),
+            r#"{"projects":["current"]}"#
+        );
+    }
+
+    #[test]
+    fn does_nothing_when_there_was_no_previous_library() {
+        let tmp = tempfile::tempdir().unwrap();
+        let new = tmp.path().join("com.nicotejera.specks");
+        assert!(!adopt_previous_library(
+            &new,
+            &tmp.path().join("com.nicotejera.speck")
+        ));
+        assert!(!new.join("projects.json").exists());
+    }
 }

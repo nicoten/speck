@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Updater signing keys. The private key lives in ~/.speck and must never be
+# Updater signing keys. The private key lives in ~/.specks and must never be
 # committed: anyone holding it can sign an update this app will trust.
 *.key
 *.key.pub

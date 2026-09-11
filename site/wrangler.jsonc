@@ -1,8 +1,8 @@
 {
-  // speck.nicotejera.com — a Worker with static assets and no script of its own,
+  // specks.nicotejera.com — a Worker with static assets and no script of its own,
   // so there is no server-side code to reason about: it is a file server on a
   // custom domain. Deploy with `npx wrangler deploy` from this directory.
-  "name": "speck-site",
+  "name": "specks-site",
   "compatibility_date": "2026-09-10",
   "assets": {
     "directory": "./public",
@@ -11,7 +11,7 @@
   },
   "routes": [
     {
-      "pattern": "speck.nicotejera.com",
+      "pattern": "specks.nicotejera.com",
       "custom_domain": true
     }
   ],

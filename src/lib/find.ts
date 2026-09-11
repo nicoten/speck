@@ -2,7 +2,7 @@
  * Find in the open view.
  *
  * A Tauri window has no find bar of its own — WKWebView does not expose one —
- * so Speck builds it. The offset arithmetic is kept separate from the DOM glue
+ * so Specks builds it. The offset arithmetic is kept separate from the DOM glue
  * below it, so the part that gets a match wrong can be tested without a
  * browser.
  */
@@ -122,8 +122,8 @@ export function rangeAt(
   return range;
 }
 
-const ALL = "speck-find";
-const CURRENT = "speck-find-current";
+const ALL = "specks-find";
+const CURRENT = "specks-find-current";
 
 /** Whether matches can be painted without being put into the DOM. */
 function canHighlight(): boolean {
